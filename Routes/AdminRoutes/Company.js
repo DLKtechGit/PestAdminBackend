@@ -4,7 +4,7 @@ const Company = require("../../Models/AdminSchema/CompanySchema")
 
 router.post('/createCompany', async (req, res) => {
 
-    let { companyName,address,email,country,state,city,phoneNumber } = req.body
+    let { companyName, address, email, country, state, city, phoneNumber } = req.body
 
     if (!companyName || !address || !email || !country || !state || !city || !phoneNumber) {
         res.statusMessage = "Missing some required Data....."
@@ -13,17 +13,17 @@ router.post('/createCompany', async (req, res) => {
 
     try {
         let CheckCompanyName = await Company.findOne({ companyName: companyName })
-        if (CheckCompanyName) {          
+        if (CheckCompanyName) {
             res.status(200).json({ message: "Company Name Already Found... Try another Name" })
         } else {
             const newCompany = new Company({
                 companyName: companyName,
-                address:address,
-                email:email,
-                country:country,
-                state:state,
-                city:city,
-                phoneNumber:phoneNumber,
+                address: address,
+                email: email,
+                country: country,
+                state: state,
+                city: city,
+                phoneNumber: phoneNumber,
                 created_date: new Date,
             })
             let result = await newCompany.save()
@@ -44,7 +44,7 @@ router.post('/createCompany', async (req, res) => {
 })
 
 router.get('/getCompany', async (req, res) => {
-    var result = await Company.find()
+    var result = await Company.find({ deleted: false });
     // console.log("result====>", result);
     res.statusMessage = "Company Data fetched successfully..."
     res.status(200).json({
@@ -63,7 +63,7 @@ router.post('/customerdelete/:id', async (req, res) => {
     }
 
     try {
-        let result = await Company.findOneAndDelete({ _id: req.params.id })
+        let result = await Company.findByIdAndUpdate(req.params.id, { deleted: true })
         if (result) {
             res.statusMessage = "Company deleted successfully..."
             res.status(200).json({
@@ -78,5 +78,14 @@ router.post('/customerdelete/:id', async (req, res) => {
         })
     }
 })
+
+router.put('/deletedcompany/:id/restore', async (req, res) => {
+    try {
+        await Company.findByIdAndUpdate(req.params.id, { deleted: false });
+        res.status(200).json({ message: 'Employee restored successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 module.exports = router;

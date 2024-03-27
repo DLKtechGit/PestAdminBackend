@@ -4,12 +4,12 @@ const Company = new mongoose.Schema({
     companyName: {
         type: String,
         required: true
-    },  
+    },
     email: {
         type: String,
-        unique : true,
+        unique: true,
         required: true
-    },     
+    },
     address: {
         type: String,
         required: true
@@ -27,11 +27,15 @@ const Company = new mongoose.Schema({
         required: true
     },
     phoneNumber: {
-        type : String,
-        unique : true,
-        required : true,
+        type: String,
+        unique: true,
+        required: true,
     },
-    created_date: Date,     
+    deleted: {
+        type: Boolean,
+        default: false
+    },
+    created_date: Date,
 });
 
 const CompanyModels = mongoose.model("Company", Company);

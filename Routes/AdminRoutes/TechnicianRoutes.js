@@ -45,7 +45,7 @@ router.post('/createTechnician', async (req, res) => {
 })
 
 router.get('/getTechnician', async (req, res) => {
-    var result = await Technician.find()
+    var result = await Technician.find({ deleted: false })
     // console.log("result====>", result);
     res.statusMessage = "Technician Data fetched successfully..."
     res.status(200).json({
@@ -64,7 +64,7 @@ router.post('/deleteTechnician/:id', async (req, res) => {
     }
 
     try {
-        let result = await Technician.findOneAndDelete({ _id: req.params.id })
+        let result = await Technician.findByIdAndUpdate(req.params.id, { deleted: true })
         if (result) {
             res.statusMessage = "Technician deleted successfully..."
             res.status(200).json({
@@ -79,5 +79,14 @@ router.post('/deleteTechnician/:id', async (req, res) => {
         })
     }
 })
+
+router.put('/deletedTechnician/:id/restore', async (req, res) => {
+    try {
+        await Technician.findByIdAndUpdate(req.params.id, { deleted: false });
+        res.status(200).json({ message: 'Technician restored successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 module.exports = router;
