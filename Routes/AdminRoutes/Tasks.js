@@ -30,7 +30,7 @@ router.post('/createTask', async (req, res) => {
 });
 
 
-router.get('/   ', async (req, res) => {
+router.get('/getTasks', async (req, res) => {
     var result = await Task.find()
     // console.log("result====>", result);
     res.statusMessage = "Technician Data fetched successfully..."

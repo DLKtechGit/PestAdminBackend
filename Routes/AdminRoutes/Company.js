@@ -4,9 +4,9 @@ const Company = require("../../Models/AdminSchema/CompanySchema")
 
 router.post('/createCompany', async (req, res) => {
 
-    let { companyName,address,country,state,city,phoneNumber } = req.body
+    let { companyName,address,email,country,state,city,phoneNumber } = req.body
 
-    if (!companyName || !address || !country || !state || !city || !phoneNumber) {
+    if (!companyName || !address || !email || !country || !state || !city || !phoneNumber) {
         res.statusMessage = "Missing some required Data....."
         return res.status(201).json()
     }
@@ -19,6 +19,7 @@ router.post('/createCompany', async (req, res) => {
             const newCompany = new Company({
                 companyName: companyName,
                 address:address,
+                email:email,
                 country:country,
                 state:state,
                 city:city,
@@ -52,30 +53,30 @@ router.get('/getCompany', async (req, res) => {
     })
 })
 
-// router.post('/deletebookseat/:id', async (req, res) => {
-//     // console.log("req====>",req.params.id);
-//     if (!req.params.id) {
-//         res.statusMessage = "Some required missing..."
-//         return res.status(201).json({
-//             error: 'Some required missing...'
-//         })
-//     }
+router.post('/customerdelete/:id', async (req, res) => {
+    // console.log("req====>",req.params.id);
+    if (!req.params.id) {
+        res.statusMessage = "Some required missing..."
+        return res.status(201).json({
+            error: 'Some required missing...'
+        })
+    }
 
-//     try {
-//         let result = await BootSeat.findOneAndDelete({ _id: req.params.id })
-//         if (result) {
-//             res.statusMessage = "BootSeat deleted successfully..."
-//             res.status(200).json({
-//                 Results: result
-//             })
-//         }
-//     }
+    try {
+        let result = await Company.findOneAndDelete({ _id: req.params.id })
+        if (result) {
+            res.statusMessage = "Company deleted successfully..."
+            res.status(200).json({
+                Results: result
+            })
+        }
+    }
 
-//     catch (err) {
-//         res.statusMessage = "BootSeat delete Failed..."
-//         res.status(400).json({
-//         })
-//     }
-// })
+    catch (err) {
+        res.statusMessage = "Company delete Failed..."
+        res.status(400).json({
+        })
+    }
+})
 
 module.exports = router;

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const AdminUser = require('../../Models/AdminSchema/AdminLoginModal');
 
-router.post('/createDefaultAdmin', async (req, res) => {
+router.post('/createDefaultAdmin', async (req, res) => {    
     try {
         const admin = new AdminUser({
             email: 'pestadmin@gmail.com', 
@@ -27,6 +27,7 @@ router.get('/getAdminLogin', async (req, res) => {
     res.status(200).json({
         Length: result.length,
         Results: result
+   
     })
 })
 

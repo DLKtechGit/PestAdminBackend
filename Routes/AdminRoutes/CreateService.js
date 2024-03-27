@@ -15,7 +15,7 @@ router.post('/createService', async (req, res) => {
     try {
         let CheckServiceName = await createServices.findOne({ serviceName: serviceName })
         if (CheckServiceName) {          
-            res.status(200).json({ message: "Service Already Found... Try another Name" })
+            res.status(403).json({ message: "Service Already Found... Try another Name" })
         } else {
             const newServices = new createServices({
                 serviceName: serviceName,
@@ -48,30 +48,30 @@ router.get('/getServices', async (req, res) => {
     })
 })
 
-// router.post('/deletebookseat/:id', async (req, res) => {
-//     // console.log("req====>",req.params.id);
-//     if (!req.params.id) {
-//         res.statusMessage = "Some required missing..."
-//         return res.status(201).json({
-//             error: 'Some required missing...'
-//         })
-//     }
+router.post('/deleteservices/:id', async (req, res) => {
+    // console.log("req====>",req.params.id);
+    if (!req.params.id) {
+        res.statusMessage = "Some required missing..."
+        return res.status(201).json({
+            error: 'Some required missing...'
+        })
+    }
 
-//     try {
-//         let result = await BootSeat.findOneAndDelete({ _id: req.params.id })
-//         if (result) {
-//             res.statusMessage = "BootSeat deleted successfully..."
-//             res.status(200).json({
-//                 Results: result
-//             })
-//         }
-//     }
+    try {
+        let result = await createServices.findOneAndDelete({ _id: req.params.id })
+        if (result) {
+            res.statusMessage = "Service deleted successfully..."
+            res.status(200).json({
+                Results: result
+            })
+        }
+    }
 
-//     catch (err) {
-//         res.statusMessage = "BootSeat delete Failed..."
-//         res.status(400).json({
-//         })
-//     }
-// })
+    catch (err) {
+        res.statusMessage = "Service delete Failed..."
+        res.status(400).json({
+        })
+    }
+})
 
 module.exports = router;
