@@ -5,53 +5,46 @@ const DeletedCustomer = require("../../Models/AdminSchema/DeletedCustomer");
 const { route } = require("./CreateService");
 
 router.post("/createCompany", async (req, res) => {
-  let { companyName, address, email, country, state, city, phoneNumber } =
-    req.body;
+  
+    let { name, address, email, country, state, city, phoneNumber } = req.body
 
-  if (
-    !companyName ||
-    !address ||
-    !email ||
-    !country ||
-    !state ||
-    !city ||
-    !phoneNumber
-  ) {
-    res.statusMessage = "Missing some required Data.....";
-    return res.status(201).json();
-  }
-
-  try {
-    let CheckCompanyName = await Company.findOne({ companyName: companyName });
-    if (CheckCompanyName) {
-      res
-        .status(200)
-        .json({ message: "Company Name Already Found... Try another Name" });
-    } else {
-      const newCompany = new Company({
-        companyName: companyName,
-        address: address,
-        email: email,
-        country: country,
-        state: state,
-        city: city,
-        phoneNumber: phoneNumber,
-        created_date: new Date(),
-      });
-      let result = await newCompany.save();
-
-      if (result) {
-        res.statusMessage = "New Service created Successfully...";
-        res.status(200).json({
-          data: result,
-        });
-      }
+    if (!name || !address || !email || !country || !state || !city || !phoneNumber) {
+        res.statusMessage = "Missing some required Data....."
+        return res.status(201).json()
     }
-  } catch (err) {
-    res.statusMessage = "Service creation Failed...";
-    res.status(400).json({});
-  }
-});
+
+    try {
+        let CheckCompanyName = await Company.findOne({ name: name })
+        if (CheckCompanyName) {
+            res.status(200).json({ message: "Company Name Already Found... Try another Name" })
+        } else {
+            const newCompany = new Company({
+                name: name,
+                address: address,
+                email: email,
+                country: country,
+                state: state,
+                city: city,
+                phoneNumber: phoneNumber,
+                created_date: new Date,
+            })
+            let result = await newCompany.save()
+
+            if (result) {
+                res.statusMessage = "New Service created Successfully..."
+                res.status(200).json({
+                    data: result
+                })
+            }
+        }
+    }
+    catch (err) {
+        res.statusMessage = "Service creation Failed..."
+        res.status(400).json({
+        })
+    }
+})
+
 
 router.get("/getCompany", async (req, res) => {
   var result = await Company.find();
@@ -69,7 +62,7 @@ router.post("/customerdelete/:id", async (req, res) => {
       if (deletedCompany) {
         const deletedCustomer = new DeletedCustomer({
           companyId: deletedCompany._id,
-          companyName: deletedCompany.companyName,
+          name: deletedCompany.name,
           email: deletedCompany.email,
           address: deletedCompany.address,
           country: deletedCompany.country,
@@ -123,7 +116,7 @@ const _id = req.params.id
       const restoredCustomer = await DeletedCustomer.findByIdAndDelete(_id);
       if (restoredCustomer) {
         const restoredCompany = new Company({
-          companyName: restoredCustomer.companyName,
+          name: restoredCustomer.name,
           address: restoredCustomer.address,
           email: restoredCustomer.email,
           country: restoredCustomer.country,
@@ -144,5 +137,16 @@ const _id = req.params.id
     }
   });
   
+
+module.exports = router;
+
+router.get('/totalcompany', async (req, res) => {
+    try {
+        const totalCustomers = await Company.countDocuments({ deleted: false });
+        res.json({ totalCustomers });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 module.exports = router;

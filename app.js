@@ -5,11 +5,12 @@ const bodyParser = require("body-parser");
 const { DB_CONNECTION_URL } = require('./env/env')
 const app = express();
 
-const AdminAuth = require("./Routes/AdminRoutes/AdminLogin")
 const CreateServices = require("./Routes/AdminRoutes/CreateService")
 const CompanyData = require("./Routes/AdminRoutes/Company")
 const TechnicianData = require("./Routes/AdminRoutes/TechnicianRoutes")
 const Tasks = require("./Routes/AdminRoutes/Tasks")
+const Admin = require("./Routes/AdminRoutes/AdminAuth")
+const OtherAuth = require("./Routes/AdminRoutes/OtherAuth")
 
 app.get("/", (req, res) => {
     res.send("from get route")
@@ -19,11 +20,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 
-app.use('/auth', AdminAuth);
 app.use('/services', CreateServices);
 app.use('/company', CompanyData);
 app.use('/technician', TechnicianData);
 app.use('/task', Tasks);
+app.use('/adminauth', Admin);
+app.use('/otherauth', OtherAuth);
 
 mongoose.connect(DB_CONNECTION_URL, {
     useNewUrlParser: true  

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const DeletedCustomer = new mongoose.Schema({
-  companyName: {
+    name: {
     type: String,
     required: true
   },
