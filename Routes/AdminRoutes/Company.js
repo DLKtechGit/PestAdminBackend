@@ -93,7 +93,7 @@ router.get("/getall/deletedcompany", async (req,res)=>{
     try {
         const DeletedCustomers = await DeletedCustomer.find()
 
-        if(DeletedCustomers)
+        if(DeletedCustomers?.length > 0)
         {
             res.status(200).json({
                 success:true,

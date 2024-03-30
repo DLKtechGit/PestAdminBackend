@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Technician = require("../../Models/AdminSchema/AddTechnicianSchema")
+const DeletedTechnician = require("../../Models/AdminSchema/DeletedTechnician")
 
 router.post('/createTechnician', async (req, res) => {
 
@@ -45,7 +46,7 @@ router.post('/createTechnician', async (req, res) => {
 })
 
 router.get('/getTechnician', async (req, res) => {
-    var result = await Technician.find({ deleted: false })
+    var result = await Technician.find()
     // console.log("result====>", result);
     res.statusMessage = "Technician Data fetched successfully..."
     res.status(200).json({
@@ -54,39 +55,89 @@ router.get('/getTechnician', async (req, res) => {
     })
 })
 
-router.post('/deleteTechnician/:id', async (req, res) => {
-    // console.log("req====>",req.params.id);
-    if (!req.params.id) {
-        res.statusMessage = "Some required missing..."
-        return res.status(201).json({
-            error: 'Some required missing...'
-        })
-    }
-
+router.post("/delete/:id", async (req, res) => {
     try {
-        let result = await Technician.findByIdAndUpdate(req.params.id, { deleted: true })
-        if (result) {
-            res.statusMessage = "Technician deleted successfully..."
+      const deletedTechnician = await Technician.findByIdAndDelete(req.params.id);
+      if (deletedTechnician) {
+        const Technicians = new DeletedTechnician({
+          technicianId: deletedTechnician._id,
+          firstName: deletedTechnician.firstName,
+          lastName: deletedTechnician.lastName,
+          phoneNumber: deletedTechnician.phoneNumber,
+          email: deletedTechnician.email,
+          address: deletedTechnician.address,
+          country: deletedTechnician.country,
+          state: deletedTechnician.state,
+          city: deletedTechnician.city,
+          created_date:deletedTechnician.created_date,
+        });
+        await Technicians.save();
+        res.status(200).json({ message: "Technician deleted successfully." });
+      } else {
+        res.status(404).json({ error: "Technician not found." });
+      }
+    } catch (error) {
+      console.error("Error deleting company:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
+router.get("/all/deletedTechnician", async (req,res)=>{
+    try {
+        const DeletedTechlnicians = await DeletedTechnician.find()
+
+        if(DeletedTechlnicians?.length > 0 )
+        {
             res.status(200).json({
-                Results: result
+                success:true,
+                message:'All deleted Technicians fetched Successfully',
+                data:DeletedTechlnicians
             })
         }
-    }
-
-    catch (err) {
-        res.statusMessage = "Technician delete Failed..."
-        res.status(400).json({
-        })
+        else{
+            res.status(404).json({
+                success:false,
+                message:'No deleted Technicians found'
+            })
+        }
+    } catch (error) {
+        console.error("Error fetching deleted Technicians:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
     }
 })
-
-router.put('/deletedTechnician/:id/restore', async (req, res) => {
+  
+  // Restore a deleted company by ID
+  router.post("/deletedtechnician/restore/:id", async (req, res) => {
+const _id = req.params.id
     try {
-        await Technician.findByIdAndUpdate(req.params.id, { deleted: false });
-        res.status(200).json({ message: 'Technician restored successfully' });
+      const restoredTechnician = await DeletedTechnician.findByIdAndDelete(_id);
+      if (restoredTechnician) {
+        const restoredTechnicians = new Technician({
+            technicianId: restoredTechnician._id,
+            firstName: restoredTechnician.firstName,
+            lastName: restoredTechnician.lastName,
+            phoneNumber: restoredTechnician.phoneNumber,
+            email: restoredTechnician.email,
+            address: restoredTechnician.address,
+            country: restoredTechnician.country,
+            state: restoredTechnician.state,
+            city: restoredTechnician.city,
+            created_date:restoredTechnician.created_date,
+        });
+        await restoredTechnicians.save();
+        
+        res.status(200).json({ message: "Technician restored successfully." });
+      } else {
+        res.status(404).json({ error: "Deleted Technicians not found." });
+      }
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+      console.error("Error restoring company:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-});
+  });
+  
 
 module.exports = router;
