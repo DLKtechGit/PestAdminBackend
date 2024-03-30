@@ -4,20 +4,20 @@ const Company = require("../../Models/AdminSchema/CompanySchema")
 
 router.post('/createCompany', async (req, res) => {
 
-    let { companyName, address, email, country, state, city, phoneNumber } = req.body
+    let { name, address, email, country, state, city, phoneNumber } = req.body
 
-    if (!companyName || !address || !email || !country || !state || !city || !phoneNumber) {
+    if (!name || !address || !email || !country || !state || !city || !phoneNumber) {
         res.statusMessage = "Missing some required Data....."
         return res.status(201).json()
     }
 
     try {
-        let CheckCompanyName = await Company.findOne({ companyName: companyName })
+        let CheckCompanyName = await Company.findOne({ name: name })
         if (CheckCompanyName) {
             res.status(200).json({ message: "Company Name Already Found... Try another Name" })
         } else {
             const newCompany = new Company({
-                companyName: companyName,
+                name: name,
                 address: address,
                 email: email,
                 country: country,
@@ -85,6 +85,16 @@ router.put('/deletedcompany/:id/restore', async (req, res) => {
         res.status(200).json({ message: 'Employee restored successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
+router.get('/totalcompany', async (req, res) => {
+    try {
+        const totalCustomers = await Company.countDocuments({ deleted: false });
+        res.json({ totalCustomers });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
 
