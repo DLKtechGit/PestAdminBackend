@@ -142,7 +142,7 @@ module.exports = router;
 
 router.get('/totalcompany', async (req, res) => {
     try {
-        const totalCustomers = await Company.countDocuments({ deleted: false });
+        const totalCustomers = await Company.countDocuments();
         res.json({ totalCustomers });
     } catch (err) {
         res.status(500).json({ message: err.message });
