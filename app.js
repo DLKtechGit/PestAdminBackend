@@ -11,6 +11,7 @@ const TechnicianData = require("./Routes/AdminRoutes/TechnicianRoutes")
 const Tasks = require("./Routes/AdminRoutes/Tasks")
 const Admin = require("./Routes/AdminRoutes/AdminAuth")
 const OtherAuth = require("./Routes/AdminRoutes/OtherAuth")
+const Qrcode = require("./Routes/AdminRoutes/Qrcode")
 
 app.get("/", (req, res) => {
     res.send("from get route")
@@ -26,6 +27,8 @@ app.use('/technician', TechnicianData);
 app.use('/task', Tasks);
 app.use('/adminauth', Admin);
 app.use('/otherauth', OtherAuth);
+app.use('/qrcode',Qrcode)
+
 
 mongoose.connect(DB_CONNECTION_URL, {
     useNewUrlParser: true  
