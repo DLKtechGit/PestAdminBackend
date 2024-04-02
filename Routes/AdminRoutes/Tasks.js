@@ -40,5 +40,42 @@ router.get('/getTasks', async (req, res) => {
     })
 })
 
+router.get('/start/taskcount', async (req, res) => {
+    try {
+        const startCount = await Task.countDocuments({ status: 'start' });
+       
+        res.status(200).json({
+            start: startCount,
+        });
+    } catch (error) {
+        console.error('Error counting tasks by status:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
+router.get('/ongoing/taskcount',async(req,res)=>{
+try {
+    const ongoingCount = await Task.countDocuments({status:'ongoing'})
+
+    res.status(200).json({
+        Ongoing:ongoingCount
+    })
+} catch (error) {
+    console.error('Error counting tasks by status:', error);
+        res.status(500).json({ error: 'Server error' });
+}
+})
+
+router.get('/completed/taskcount', async(req,res)=>{
+    try {
+        const CompletedTask = await Task.countDocuments({status:'completed'})
+
+        res.status(200).json({
+            Completed:CompletedTask
+        })
+    } catch (error) {
+         console.error('Error counting tasks by status:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+})
 module.exports = router;
