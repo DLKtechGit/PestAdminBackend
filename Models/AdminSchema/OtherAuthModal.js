@@ -14,6 +14,10 @@ const OtherAuth = new mongoose.Schema({
         type: String,        
         // required: true
     },
+    confirmpassword:{
+        type: String,        
+        // required: true
+    },
     created_date: Date,
 });
 
