@@ -11,7 +11,7 @@ router.post("/createCompany", async (req, res) => {
     return res.status(201).json()
   }
   try {
-    let CheckCompanyName = await Company.findOne({ name: name })
+    let CheckCompanyName = await Company.findOne({ email: email })
     if (CheckCompanyName) {
       res.status(200).json({ message: "Company Name Already Found... Try another Name" })
     } else {
@@ -36,6 +36,7 @@ router.post("/createCompany", async (req, res) => {
     }
   }
   catch (err) {
+    // console.log("err--------------------->",err);
     res.statusMessage = "Service creation Failed..."
     res.status(400).json({
     })

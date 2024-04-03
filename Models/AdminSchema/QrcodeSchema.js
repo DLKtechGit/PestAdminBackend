@@ -37,7 +37,8 @@ const qrCode = new mongoose.Schema({
     qrImage:{
         type:String,
         
-    }
+    },
+    created_date: Date,     
 
 
 })

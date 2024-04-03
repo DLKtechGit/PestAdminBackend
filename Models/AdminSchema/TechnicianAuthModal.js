@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const OtherAuth = new mongoose.Schema({
+const TechnicianAuth = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -21,5 +21,5 @@ const OtherAuth = new mongoose.Schema({
     created_date: Date,
 });
 
-const CustomerRegisterModels = mongoose.model("RegisterCompany", OtherAuth);
-module.exports = CustomerRegisterModels;
+const TechnicianRegisterModels = mongoose.model("RegisterTechnician", TechnicianAuth);
+module.exports = TechnicianRegisterModels;
