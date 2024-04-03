@@ -28,28 +28,28 @@ router.post('/customerRegister/:id', async (req, res) => {
 
 router.get("/registeredCustomers", async (req, res) => {
     try {
-      const RegisteredCustomers = await CustomerAuth.find()
-      if (RegisteredCustomers?.length > 0) {
-        res.status(200).json({
-          success: true,
-          message: 'All Registered Companies fetched Successfully',
-          data: RegisteredCustomers
-        })
-      }
-      else {
-        res.status(404).json({
-          success: false,
-          message: 'No Registered companies found'
-        })
-      }
+        const RegisteredCustomers = await CustomerAuth.find()
+        if (RegisteredCustomers?.length > 0) {
+            res.status(200).json({
+                success: true,
+                message: 'All Registered Companies fetched Successfully',
+                data: RegisteredCustomers
+            })
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'No Registered companies found'
+            })
+        }
     } catch (error) {
-      console.error("Error fetching Registered companies:", error);
-      res.status(500).json({
-        success: false,
-        message: "Internal server error"
-      });
+        console.error("Error fetching Registered companies:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
     }
-  })
+})
 
 
 router.post('/resetPassword', async (req, res) => {
@@ -81,7 +81,7 @@ router.post('/resetPassword', async (req, res) => {
     } catch (err) {
         console.error("Error:", err);
         return res.status(500).json({ message: "Password changing failed" });
-    } 
+    }
 });
 
 
@@ -111,28 +111,61 @@ router.post('/technicianRegister/:id', async (req, res) => {
 
 router.get("/registeredTechnician", async (req, res) => {
     try {
-      const RegisteredCustomers = await TechnicianAuth.find()
-      if (RegisteredCustomers?.length > 0) {
-        res.status(200).json({
-          success: true,
-          message: 'All Registered Technician fetched Successfully',
-          data: RegisteredCustomers
-        })
-      }
-      else {
-        res.status(404).json({
-          success: false,
-          message: 'No Registered Technician found'
-        })
-      }
+        const RegisteredCustomers = await TechnicianAuth.find()
+        if (RegisteredCustomers?.length > 0) {
+            res.status(200).json({
+                success: true,
+                message: 'All Registered Technician fetched Successfully',
+                data: RegisteredCustomers
+            })
+        }
+        else {
+            res.status(404).json({
+                success: false,
+                message: 'No Registered Technician found'
+            })
+        }
     } catch (error) {
-      console.error("Error fetching Registered Technician:", error);
-      res.status(500).json({
-        success: false,
-        message: "Internal server error"
-      });
+        // console.error("Error fetching Registered Technician:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
     }
-  })
+})
+
+
+router.post('/technicianlogin', async (req, res) => {
+    // console.log("Body ===>> ", req.body)
+    let { email, password } = req.body
+
+    if (!email || !password) {
+        res.statusMessage = "mail/password required..."
+        return res.status(201).json()
+    }
+    try {
+        let result = await TechnicianAuth.findOne({ email: email })
+        // console.log("result----->", result)
+        if (email === result.email && password === result.password) {
+            res.statusMessage = "LoggedIn Successfully..."
+            res.status(200).json({
+                data: result
+            })
+        }
+        else {
+            res.statusMessage = "Wrong Credetial... Check Again..."
+            res.status(400).json()
+        }
+    }
+    catch (err) {
+        res.statusMessage = "Techinician Not Found..."
+        res.status(400).json({
+            error: err,
+        })
+    }
+
+})
+
 
 router.post('/resetPwdTechnician', async (req, res) => {
     let { email, password, confirmpassword } = req.body;
@@ -152,7 +185,6 @@ router.post('/resetPwdTechnician', async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
         user.password = password;
         user.modified_date = new Date();
 
@@ -163,7 +195,7 @@ router.post('/resetPwdTechnician', async (req, res) => {
     } catch (err) {
         console.error("Error:", err);
         return res.status(500).json({ message: "Password changing failed" });
-    } 
+    }
 });
 
 module.exports = router;

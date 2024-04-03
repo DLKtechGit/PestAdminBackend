@@ -77,7 +77,6 @@ router.get("/getQrcode", async (req, res) => {
 })
 
 router.post('/deleteQrcode/:id', async (req, res) => {
-    // console.log("req====>",req.params.id);
     if (!req.params.id) {
         res.statusMessage = "Some required missing..."
         return res.status(201).json({
