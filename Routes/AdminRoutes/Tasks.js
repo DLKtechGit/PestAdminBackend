@@ -41,6 +41,16 @@ router.get('/getTasks', async (req, res) => {
     })
 })
 
+router.get('/getTasks', async (req, res) => {
+    var result = await Task.find()
+    // console.log("result====>", result);
+    res.statusMessage = "Technician Data fetched successfully..."
+    res.status(200).json({
+        Length: result.length,
+        Results: result
+    })
+})
+
 router.get('/start/taskcount', async (req, res) => {
     try {
         const startCount = await Task.countDocuments({ status: 'start' });
