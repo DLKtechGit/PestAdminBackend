@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
 router.get("/GetregisteredCustomers", async (req, res) => {
     // console.log("res==============>",req);
     try {
-        const RegisteredCustomers = await Auth.find({ registered: true, role: "Customer" })
+        const RegisteredCustomers = await Auth.find({ registered: true, role: "Customer",deleted:false })
         console.log("RegisteredCustomers", RegisteredCustomers);
         if (RegisteredCustomers?.length > 0) {
             res.status(200).json({

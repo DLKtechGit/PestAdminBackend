@@ -41,7 +41,7 @@ const Customer = new mongoose.Schema({
     },
     deleted: {
         type: Boolean,
-        // default: false
+        default: false
     },
     password: {
         type: String,
