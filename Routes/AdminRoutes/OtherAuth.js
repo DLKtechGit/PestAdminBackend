@@ -1,26 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const CustomerAuth = require('../../Models/AdminSchema/OtherAuthModal');
-const TechnicianAuth = require('../../Models/AdminSchema/TechnicianAuthModal');
+const CustomerAuth = require('../../Models/AdminSchema/CompanySchema');
+const TechnicianAuth = require('../../Models/AdminSchema/AddTechnicianSchema');
 const OtherAuthModal = require('../../Models/AdminSchema/OtherAuthModal')
 // const bcrypt = require('bcrypt');
 
-router.post('/customerRegister/:id', async (req, res) => {
+router.post('/customerRegister', async (req, res) => {
 
     try {
-        const { name, email, password,role } = req.body;
-        const { id } = req.params;
-        // console.log("req----------->",req.params);
-        // Check if an admin with the same email already exists
-        const existingAdmin = await CustomerAuth.findOne({ email });
+        const { name, email, password, role } = req.body;
+        const { id } = req.params;        
+        const existingAdmin = await CustomerAuth.findOneAndUpdate({email},{ $set: {password,role,registered:true}});
 
-        if (existingAdmin) {
-            return res.status(400).json({ message: 'Customer login already exists for this person' });
-        }
-        const admin = new CustomerAuth({ name, email, password, role, adminId: id, created_date: new Date() });
-        let result = await admin.save();
-
-        res.status(200).json({ message: 'Customer registered successfully', data: result });
+        res.status(200).json({ message: 'Customer registered successfully' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server Error' });
@@ -29,7 +21,7 @@ router.post('/customerRegister/:id', async (req, res) => {
 
 router.get("/registeredCustomers", async (req, res) => {
     try {
-        const RegisteredCustomers = await CustomerAuth.find()
+        const RegisteredCustomers = await CustomerAuth.find({ registered: true })
         if (RegisteredCustomers?.length > 0) {
             res.status(200).json({
                 success: true,
@@ -88,31 +80,41 @@ router.post('/resetPassword', async (req, res) => {
 
 // technician
 
-router.post('/technicianRegister/:id', async (req, res) => {
+router.post('/technicianRegister', async (req, res) => {
 
     try {
-        const { name, email, password } = req.body;
-        const { id } = req.params;
-        // console.log("req----------->",req.params);
-        // Check if an admin with the same email already exists
-        const existingAdmin = await TechnicianAuth.findOne({ email });
+        const {  email, password, role } = req.body;
+        const existingAdmin = await TechnicianAuth.findOneAndUpdate({email},{ $set: {password,role,registered:true}});
 
-        if (existingAdmin) {
-            return res.status(400).json({ message: 'Techinician login already exists for this person' });
-        }
-        const admin = new TechnicianAuth({ name, email, password, adminId: id, created_date: new Date() });
-        let result = await admin.save();
-
-        res.status(200).json({ message: 'Techinician registered successfully', data: result });
+        res.status(200).json({ message: 'Technician registered successfully' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server Error' });
     }
+
+    // try {
+    //     const { name, email, password } = req.body;
+    //     const { id } = req.params;
+    //     // console.log("req----------->",req.params);
+    //     // Check if an admin with the same email already exists
+    //     const existingAdmin = await TechnicianAuth.findOne({ email });
+
+    //     if (existingAdmin) {
+    //         return res.status(400).json({ message: 'Techinician login already exists for this person' });
+    //     }
+    //     const admin = new TechnicianAuth({ name, email, password, adminId: id, created_date: new Date() });
+    //     let result = await admin.save();
+
+    //     res.status(200).json({ message: 'Techinician registered successfully', data: result });
+    // } catch (err) {
+    //     console.error(err.message);
+    //     res.status(500).json({ message: 'Server Error' });
+    // }
 });
 
 router.get("/registeredTechnician", async (req, res) => {
     try {
-        const RegisteredCustomers = await TechnicianAuth.find()
+        const RegisteredCustomers = await TechnicianAuth.find({ registered: true })
         if (RegisteredCustomers?.length > 0) {
             res.status(200).json({
                 success: true,
@@ -154,7 +156,7 @@ router.post('/technicianlogin', async (req, res) => {
         }
 
         // Assuming role is stored in the result
-        res.status(200).json({ status: 200, result: result});
+        res.status(200).json({ status: 200, result: result });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal server error." });

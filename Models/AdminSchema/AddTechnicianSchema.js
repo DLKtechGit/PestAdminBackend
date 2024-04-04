@@ -3,43 +3,58 @@ const mongoose = require('mongoose');
 const technician = new mongoose.Schema({
     firstName: {
         type: String,
-        required: true
+        // required: true
     },
     lastName: {
         type: String,
-        required: true
-    },    
+        // required: true
+    },
     phoneNumber: {
-        type : String,
-        unique : true,
-        required : true,
+        type: String,
+        unique: true,
+        // required: true,
     },
     email: {
         type: String,
-        required: true
+        // required: true
     },
     address: {
         type: String,
-        required: true
+        // required: true
     },
     country: {
         type: String,
-        required: true
+        // required: true
     },
     state: {
         type: String,
-        required: true
+        // required: true
     },
     city: {
         type: String,
-        required: true
+        // required: true
     },
     deleted: {
         type: Boolean,
         default: false
     },
-   
-    created_date: Date,     
+    password: {
+        type: String,
+        // required: true
+    },
+    confirmpassword: {
+        type: String,
+        // required: true
+    },
+    role: {
+        type: String,
+        // required:true
+    },
+    registered: {
+        type: Boolean,
+        default: false
+    },
+    created_date: Date,
 });
 
 const Technician = mongoose.model("Technician", technician);

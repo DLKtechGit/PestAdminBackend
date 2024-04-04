@@ -36,12 +36,12 @@ router.post("/createCompany", async (req, res) => {
     }
   }
   catch (err) {
-    // console.log("err--------------------->",err);
+    console.log("err--------------------->",err);
     res.statusMessage = "Service creation Failed..."
     res.status(400).json({
     })
   }
-})
+}) 
 
 router.post("/editCompany/:id", async (req, res) => {
   const companyId = req.params.id;
