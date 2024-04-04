@@ -2,14 +2,19 @@ const express = require('express');
 const router = express.Router();
 const Task = require("../../Models/AdminSchema/Tasks")
 const Technician = require("../../Models/AdminSchema/AddTechnicianSchema")
+const Customer = require("../../Models/AdminSchema/CompanySchema")
 
 router.post('/createTask', async (req, res) => {
     try {
-        const { serviceName, companyName, startDate, description, assignedTo,status } = req.body;
+        const { serviceName, companyName, startDate, description, assignedTo,assignedFrom,status } = req.body;
         // Ensure assignedTo contains valid employee IDs
         const validEmployeeIds = await Technician.find({ _id: assignedTo})       
+        const validCustomerIds = await Customer.find({ _id: assignedFrom})       
         if (validEmployeeIds.length === assignedTo.length) {
             return res.status(400).json({ error: 'Invalid employee IDs provided' });
+        }
+        if (validCustomerIds.length === assignedFrom.length) {
+            return res.status(400).json({ error: 'Invalid Customer IDs provided' });
         }
         // var Technician = await Technician.find()
         const task = new Task({
@@ -19,6 +24,7 @@ router.post('/createTask', async (req, res) => {
             startDate:startDate,
             description:description,
             assignedTo:validEmployeeIds,
+            assignedFrom:validCustomerIds,
             status:status,
             created_date: new Date
         });

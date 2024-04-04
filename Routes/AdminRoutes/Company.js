@@ -36,12 +36,12 @@ router.post("/createCompany", async (req, res) => {
     }
   }
   catch (err) {
-    // console.log("err--------------------->",err);
+    console.log("err--------------------->",err);
     res.statusMessage = "Service creation Failed..."
     res.status(400).json({
     })
   }
-})
+}) 
 
 router.post("/editCompany/:id", async (req, res) => {
   const companyId = req.params.id;
@@ -86,7 +86,7 @@ router.post("/editCompany/:id", async (req, res) => {
 
 
 router.get("/getCompany", async (req, res) => {
-  var result = await Company.find();
+  var result = await Company.find({});
   // console.log("result====>", result);
   res.statusMessage = "Company Data fetched successfully...";
   res.status(200).json({

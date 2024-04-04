@@ -1,42 +1,57 @@
 const mongoose = require('mongoose');
 
-const Company = new mongoose.Schema({
+const Customer = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        // required: true
     },
     email: {
         type: String,
         unique: true,
-        required: true
+        // required: true
     },
     address: {
         type: String,
-        required: true
+        // required: true
     },
     country: {
         type: String,
-        required: true
+        // required: true
     },
     state: {
         type: String,
-        required: true
+        // required: true
     },
     city: {
         type: String,
-        required: true
+        // required: true
     },
     phoneNumber: {
         type: String,
         unique: true,
-        required: true,
+        // required: true,
     },
     deleted: {
         type: Boolean,
+        // default: false
+    },
+    password: {
+        type: String,
+        // required: true
+    },
+    confirmpassword: {
+        type: String,
+        // required: true
+    },
+    registered: {
+        type: Boolean,
         default: false
+    },
+    role: {
+        type: String,
     },
     created_date: Date,
 });
 
-const CompanyModels = mongoose.model("Company", Company);
+const CompanyModels = mongoose.model("Customer", Customer);
 module.exports = CompanyModels;
