@@ -6,7 +6,7 @@ router.post('/create/qr', async (req, res) => {
     const { qrTitle, serviceName, customerName, startDate, time, format, width, height, qrImage } = req.body;
 
 
-    if (!qrTitle || !serviceName || !customerName || !startDate || !time || !format || !width || !height) {
+    if (!qrTitle || !serviceName || !customerName || !startDate || !format || !width || !height) {
         return res.status(400).json({
             message: 'Missing some required data.'
         });
@@ -27,7 +27,6 @@ router.post('/create/qr', async (req, res) => {
             serviceName: serviceName,
             customerName: customerName,
             startDate: startDate,
-            time: time,
             width: width,
             height: height,
             qrImage: qrImage,
@@ -100,5 +99,14 @@ router.post('/deleteQrcode/:id', async (req, res) => {
         })
     }
 })
+
+router.get('/totalQrcodes', async (req, res) => {
+    try {
+      const totalQrcode = await Qrcode.countDocuments();
+      res.json({ totalQrcode });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  });
 
 module.exports = router;

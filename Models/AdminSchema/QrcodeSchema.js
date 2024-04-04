@@ -19,7 +19,7 @@ const qrCode = new mongoose.Schema({
     },
     time:{
         type:String,
-        required:true
+        // required:true
     },
     
     format:{

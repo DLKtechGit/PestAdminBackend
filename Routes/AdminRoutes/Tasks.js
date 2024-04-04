@@ -16,6 +16,7 @@ router.post('/createTask', async (req, res) => {
             serviceName:serviceName,
             companyName:companyName,
             startDate:startDate,
+            startDate:startDate,
             description:description,
             assignedTo:validEmployeeIds,
             status:status,
