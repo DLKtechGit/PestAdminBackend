@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const CustomerAuth = require('../../Models/AdminSchema/OtherAuthModal');
 const TechnicianAuth = require('../../Models/AdminSchema/TechnicianAuthModal');
+const OtherAuthModal = require('../../Models/AdminSchema/OtherAuthModal')
 // const bcrypt = require('bcrypt');
 
 router.post('/customerRegister/:id', async (req, res) => {
 
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,role } = req.body;
         const { id } = req.params;
         // console.log("req----------->",req.params);
         // Check if an admin with the same email already exists
@@ -16,7 +17,7 @@ router.post('/customerRegister/:id', async (req, res) => {
         if (existingAdmin) {
             return res.status(400).json({ message: 'Customer login already exists for this person' });
         }
-        const admin = new CustomerAuth({ name, email, password, adminId: id, created_date: new Date() });
+        const admin = new CustomerAuth({ name, email, password, role, adminId: id, created_date: new Date() });
         let result = await admin.save();
 
         res.status(200).json({ message: 'Customer registered successfully', data: result });
@@ -136,35 +137,30 @@ router.get("/registeredTechnician", async (req, res) => {
 
 
 router.post('/technicianlogin', async (req, res) => {
-    // console.log("Body ===>> ", req.body)
-    let { email, password } = req.body
+    let { email, password } = req.body;
 
     if (!email || !password) {
-        res.statusMessage = "mail/password required..."
-        return res.status(201).json()
-    }
-    try {
-        let result = await TechnicianAuth.findOne({ email: email })
-        // console.log("result----->", result)
-        if (email === result.email && password === result.password) {
-            res.statusMessage = "LoggedIn Successfully..."
-            res.status(200).json({
-                data: result
-            })
-        }
-        else {
-            res.statusMessage = "Wrong Credetial... Check Again..."
-            res.status(400).json()
-        }
-    }
-    catch (err) {
-        res.statusMessage = "Techinician Not Found..."
-        res.status(400).json({
-            error: err,
-        })
+        return res.status(400).json({ message: "Email and password are required." });
     }
 
-})
+    try {
+        let result = await OtherAuthModal.findOne({ email: email });
+        if (!result) {
+            return res.status(400).json({ message: "Technician not found." });
+        }
+
+        if (password !== result.password) {
+            return res.status(400).json({ message: "Incorrect password." });
+        }
+
+        // Assuming role is stored in the result
+        res.status(200).json({ status: 200, result: result});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal server error." });
+    }
+});
+
 
 
 router.post('/resetPwdTechnician', async (req, res) => {
