@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const CustomerAuth = require('../../Models/AdminSchema/OtherAuthModal');
-const TechnicianAuth = require('../../Models/AdminSchema/TechnicianAuthModal');
+
+
 const OtherAuthModal = require('../../Models/AdminSchema/OtherAuthModal')
 // const bcrypt = require('bcrypt');
 
@@ -12,12 +12,12 @@ router.post('/customerRegister/:id', async (req, res) => {
         const { id } = req.params;
         // console.log("req----------->",req.params);
         // Check if an admin with the same email already exists
-        const existingAdmin = await CustomerAuth.findOne({ email });
+        const existingAdmin = await OtherAuthModal.findOne({ email });
 
         if (existingAdmin) {
             return res.status(400).json({ message: 'Customer login already exists for this person' });
         }
-        const admin = new CustomerAuth({ name, email, password, role, adminId: id, created_date: new Date() });
+        const admin = new OtherAuthModal({ name, email, password, role, adminId: id, created_date: new Date() });
         let result = await admin.save();
 
         res.status(200).json({ message: 'Customer registered successfully', data: result });
@@ -29,7 +29,7 @@ router.post('/customerRegister/:id', async (req, res) => {
 
 router.get("/registeredCustomers", async (req, res) => {
     try {
-        const RegisteredCustomers = await CustomerAuth.find()
+        const RegisteredCustomers = await OtherAuthModal.find()
         if (RegisteredCustomers?.length > 0) {
             res.status(200).json({
                 success: true,
@@ -66,7 +66,7 @@ router.post('/resetPassword', async (req, res) => {
 
     try {
         // Find the user by email
-        let user = await CustomerAuth.findOne({ email });
+        let user = await OtherAuthModal.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -91,16 +91,16 @@ router.post('/resetPassword', async (req, res) => {
 router.post('/technicianRegister/:id', async (req, res) => {
 
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,role } = req.body;
         const { id } = req.params;
         // console.log("req----------->",req.params);
         // Check if an admin with the same email already exists
-        const existingAdmin = await TechnicianAuth.findOne({ email });
+        const existingAdmin = await OtherAuthModal.findOne({ email });
 
         if (existingAdmin) {
             return res.status(400).json({ message: 'Techinician login already exists for this person' });
         }
-        const admin = new TechnicianAuth({ name, email, password, adminId: id, created_date: new Date() });
+        const admin = new OtherAuthModal({ name, email, password,role, adminId: id, created_date: new Date() });
         let result = await admin.save();
 
         res.status(200).json({ message: 'Techinician registered successfully', data: result });
@@ -112,7 +112,7 @@ router.post('/technicianRegister/:id', async (req, res) => {
 
 router.get("/registeredTechnician", async (req, res) => {
     try {
-        const RegisteredCustomers = await TechnicianAuth.find()
+        const RegisteredCustomers = await OtherAuthModal.find()
         if (RegisteredCustomers?.length > 0) {
             res.status(200).json({
                 success: true,
@@ -176,7 +176,7 @@ router.post('/resetPwdTechnician', async (req, res) => {
 
     try {
         // Find the user by email
-        let user = await TechnicianAuth.findOne({ email });
+        let user = await OtherAuthModal.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
