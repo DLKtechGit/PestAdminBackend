@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Company = new mongoose.Schema({
+const Customer = new mongoose.Schema({
     name: {
         type: String,
         // required: true
@@ -53,5 +53,5 @@ const Company = new mongoose.Schema({
     created_date: Date,
 });
 
-const CompanyModels = mongoose.model("Company", Company);
+const CompanyModels = mongoose.model("Customer", Customer);
 module.exports = CompanyModels;

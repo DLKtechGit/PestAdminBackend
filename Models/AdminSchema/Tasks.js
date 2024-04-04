@@ -55,21 +55,56 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 ref: 'Technician'
             },
-            country: {
+            role:{
                 type: String,
                 ref: 'Technician'
+            }      
+        }
+    ],
+    assignedFrom: [
+        {
+            users: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Customer'
+            },
+            name: {
+                type: String,
+                ref: 'Customer'
+            },
+            lastName: {
+                type: String,
+                ref: 'Customer'
+            },    
+            phoneNumber: {
+                type : String,
+                ref: 'Customer'
+            },
+            email: {
+                type: String,
+                ref: 'Customer'
+            },
+            address: {
+                type: String,
+                ref: 'Customer'
+            },
+            country: {
+                type: String,
+                ref: 'Customer'
             },
             state: {
                 type: String,
-                ref: 'Technician'
+                ref: 'Customer'
             },
             city: {
                 type: String,
-                ref: 'Technician'
+                ref: 'Customer'
             },
+            role:{
+                type: String,
+                ref: 'Customer'
+            } 
         }
     ],
-    
 
     created_date: Date,
 });
