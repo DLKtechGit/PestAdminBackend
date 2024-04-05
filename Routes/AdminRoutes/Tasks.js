@@ -1,35 +1,98 @@
 const express = require('express');
 const router = express.Router();
-const Task = require("../../Models/AdminSchema/Tasks")
+const Task = require("../../Models/AdminSchema/TaskSchema")
 const Technician = require("../../Models/AdminSchema/CompanySchema")
 const Customer = require("../../Models/AdminSchema/CompanySchema")
 
+// router.post('/createTask', async (req, res) => {
+//     try {
+//         const { serviceName, companyName, startDate, description, assignedTo,assignedFrom,status } = req.body;
+//         // Ensure assignedTo contains valid employee IDs
+//         const validEmployeeIds = await Technician.find({ _id: assignedTo,role:"Technician"})       
+//         const validCustomerIds = await Customer.find({ _id: assignedFrom,role:"Customer"})       
+//         if (validEmployeeIds.length === assignedTo.length) {
+//             return res.status(400).json({ error: 'Invalid employee IDs provided' });
+//         }
+//         if (validCustomerIds.length === assignedFrom.length) {
+//             return res.status(400).json({ error: 'Invalid Customer IDs provided' });
+//         }
+//         // var Technician = await Technician.find()
+//         const task = new Task({
+//             serviceName:serviceName,
+//             companyName:companyName,
+//             startDate:startDate,
+//             startDate:startDate,
+//             description:description,
+//             assignedTo:validEmployeeIds,
+//             assignedFrom:validCustomerIds,
+//             status:status,
+//             created_date: new Date
+//         });
+//         await task.save();
+//         res.status(201).json(task);
+//     } catch (error) {
+//         console.error('Error creating task:', error);
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
+// router.post('/createTask', async (req, res) => {
+//     try {
+//         const { technicianId, customerId, taskDetails } = req.body;
+
+//         // Check if a task already exists for the same technician and customer
+//         const existingTask = await Task.findOne({ technicianId, customerId });
+
+//         if (existingTask) {
+//             // Add the new task to the existing task array
+//             existingTask.tasks.push(taskDetails);
+//             await existingTask.save();
+//             res.status(200).json({ message: 'Task added successfully', task: existingTask });
+//         } else {
+//             // Create a new task document
+//             const newTask = new Task({
+//                 technicianId,
+//                 customerId,
+//                 tasks: [taskDetails]
+//             });
+//             await newTask.save();
+//             res.status(201).json({ message: 'Task created successfully', task: newTask });
+//         }
+//     } catch (error) {
+//         console.error('Error creating task:', error);
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// });
+
+// POST /createTask
+// Create a new task for a technician under a specific customer
 router.post('/createTask', async (req, res) => {
     try {
-        const { serviceName, companyName, startDate, description, assignedTo,assignedFrom,status } = req.body;
-        // Ensure assignedTo contains valid employee IDs
-        const validEmployeeIds = await Technician.find({ _id: assignedTo,role:"Technician"})       
-        const validCustomerIds = await Customer.find({ _id: assignedFrom,role:"Customer"})       
-        if (validEmployeeIds.length === assignedTo.length) {
-            return res.status(400).json({ error: 'Invalid employee IDs provided' });
-        }
-        if (validCustomerIds.length === assignedFrom.length) {
-            return res.status(400).json({ error: 'Invalid Customer IDs provided' });
-        }
-        // var Technician = await Technician.find()
-        const task = new Task({
-            serviceName:serviceName,
-            companyName:companyName,
-            startDate:startDate,
-            startDate:startDate,
-            description:description,
-            assignedTo:validEmployeeIds,
-            assignedFrom:validCustomerIds,
-            status:status,
-            created_date: new Date
+        const { customerId, technicianId, taskDetails } = req.body;
+
+        // Find the existing task for the same technician and customer
+        const existingTask = await Task.findOne({
+            customerId: customerId,
+            'technicians.technicianId': technicianId
         });
-        await task.save();
-        res.status(201).json(task);
+
+        if (existingTask) {
+            // Add the new task details to the existing task
+            const technicianIndex = existingTask.technicians.findIndex(t => t.technicianId.toString() === technicianId);
+            existingTask.technicians[technicianIndex].tasks.push(taskDetails);
+            await existingTask.save();
+            res.status(200).json({ message: 'Task added successfully', task: existingTask });
+        } else {
+            // Create a new task document
+            const newTask = new Task({
+                customerId: customerId,
+                technicians: [{
+                    technicianId: technicianId,
+                    tasks: [taskDetails]
+                }]
+            });
+            const savedTask = await newTask.save();
+            res.status(201).json({ message: 'Task created successfully', task: savedTask });
+        }
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).json({ error: 'Server error' });
@@ -96,3 +159,4 @@ router.get('/completed/taskcount', async(req,res)=>{
     }
 })
 module.exports = router;
+ 
