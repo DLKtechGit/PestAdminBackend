@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const Technician = require("../../Models/AdminSchema/AddTechnicianSchema")
+const Technician = require("../../Models/AdminSchema/CompanySchema")
 const DeletedTechnician = require("../../Models/AdminSchema/DeletedTechnician")
 
 router.post('/createTechnician', async (req, res) => {
-
-  let { firstName, lastName, email, address, country, state, city, phoneNumber } = req.body
-
-  if (!firstName || !lastName || !phoneNumber || !email || !address || !country || !state || !city) {
+  let { firstName, lastName, email, phoneNumber } = req.body
+  if (!firstName || !lastName || !phoneNumber || !email ) {
     res.statusMessage = "Missing some required Data....."
     return res.status(201).json()
   }
@@ -21,10 +19,11 @@ router.post('/createTechnician', async (req, res) => {
         firstName: firstName,
         lastName: lastName,
         email: email,
-        address: address,
-        country: country,
-        state: state,
-        city: city,
+        // address: address,
+        // country: country,
+        // state: state,
+        // city: city,
+        role:"Technician",
         phoneNumber: phoneNumber,
         created_date: new Date,
       })
@@ -46,7 +45,7 @@ router.post('/createTechnician', async (req, res) => {
 })
 
 router.get('/getTechnician', async (req, res) => {
-  var result = await Technician.find()
+  var result = await Technician.find({role:"Technician"})
   // console.log("result====>", result);
   res.statusMessage = "Technician Data fetched successfully..."
   res.status(200).json({
@@ -54,6 +53,8 @@ router.get('/getTechnician', async (req, res) => {
     Results: result
   })
 })
+
+
 
 router.post("/editTechnician/:id", async (req, res) => {
   const technicianId = req.params.id;
@@ -90,34 +91,53 @@ router.post("/editTechnician/:id", async (req, res) => {
 
 router.post("/delete/:id", async (req, res) => {
   try {
-    const deletedTechnician = await Technician.findByIdAndDelete(req.params.id);
-    if (deletedTechnician) {
-      const Technicians = new DeletedTechnician({
-        technicianId: deletedTechnician._id,
-        firstName: deletedTechnician.firstName,
-        lastName: deletedTechnician.lastName,
-        phoneNumber: deletedTechnician.phoneNumber,
-        email: deletedTechnician.email,
-        address: deletedTechnician.address,
-        country: deletedTechnician.country,
-        state: deletedTechnician.state,
-        city: deletedTechnician.city,
-        created_date: deletedTechnician.created_date,
-      });
-      await Technicians.save();
-      res.status(200).json({ message: "Technician deleted successfully." });
-    } else {
-      res.status(404).json({ error: "Technician not found." });
+    const { id } = req.params;
+    const company = await Technician.findById(id);
+
+    if (!company) {
+      return res.status(404).json({ error: "Company not found." });
     }
+
+    company.deleted = !company.deleted; // Toggle the deleted field
+    await company.save();
+
+    res.status(200).json({ message: `Company ${company.deleted ? 'marked as deleted' : 'restored'} successfully.` });
   } catch (error) {
     console.error("Error deleting company:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// router.post("/delete/:id", async (req, res) => {
+//   try {
+//     const deletedTechnician = await Technician.findByIdAndDelete(req.params.id);
+//     if (deletedTechnician) {
+//       const Technicians = new DeletedTechnician({
+//         technicianId: deletedTechnician._id,
+//         firstName: deletedTechnician.firstName,
+//         lastName: deletedTechnician.lastName,
+//         phoneNumber: deletedTechnician.phoneNumber,
+//         email: deletedTechnician.email,
+//         address: deletedTechnician.address,
+//         country: deletedTechnician.country,
+//         state: deletedTechnician.state,
+//         city: deletedTechnician.city,
+//         created_date: deletedTechnician.created_date,
+//       });
+//       await Technicians.save();
+//       res.status(200).json({ message: "Technician deleted successfully." });
+//     } else {
+//       res.status(404).json({ error: "Technician not found." });
+//     }
+//   } catch (error) {
+//     console.error("Error deleting company:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
 router.get("/all/deletedTechnician", async (req, res) => {
   try {
-    const DeletedTechlnicians = await DeletedTechnician.find()
+    const DeletedTechlnicians = await Technician.find({ deleted: true })
 
     if (DeletedTechlnicians?.length > 0) {
       res.status(200).json({
@@ -142,27 +162,42 @@ router.get("/all/deletedTechnician", async (req, res) => {
 })
 
 // Restore a deleted company by ID
+// router.post("/deletedtechnician/restore/:id", async (req, res) => {
+//   const _id = req.params.id
+//   try {
+//     const restoredTechnician = await DeletedTechnician.findByIdAndDelete(_id);
+//     if (restoredTechnician) {
+//       const restoredTechnicians = new Technician({
+//         technicianId: restoredTechnician._id,
+//         firstName: restoredTechnician.firstName,
+//         lastName: restoredTechnician.lastName,
+//         phoneNumber: restoredTechnician.phoneNumber,
+//         email: restoredTechnician.email,
+//         address: restoredTechnician.address,
+//         country: restoredTechnician.country,
+//         state: restoredTechnician.state,
+//         city: restoredTechnician.city,
+//         created_date: restoredTechnician.created_date,
+//       });
+//       await restoredTechnicians.save();
+//       res.status(200).json({ message: "Technician restored successfully." });
+//     } else {
+//       res.status(404).json({ error: "Deleted Technicians not found." });
+//     }
+//   } catch (error) {
+//     console.error("Error restoring company:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 router.post("/deletedtechnician/restore/:id", async (req, res) => {
-  const _id = req.params.id
+  const _id = req.params.id;
   try {
-    const restoredTechnician = await DeletedTechnician.findByIdAndDelete(_id);
-    if (restoredTechnician) {
-      const restoredTechnicians = new Technician({
-        technicianId: restoredTechnician._id,
-        firstName: restoredTechnician.firstName,
-        lastName: restoredTechnician.lastName,
-        phoneNumber: restoredTechnician.phoneNumber,
-        email: restoredTechnician.email,
-        address: restoredTechnician.address,
-        country: restoredTechnician.country,
-        state: restoredTechnician.state,
-        city: restoredTechnician.city,
-        created_date: restoredTechnician.created_date,
-      });
-      await restoredTechnicians.save();
-      res.status(200).json({ message: "Technician restored successfully." });
+    const restoredCompany = await Technician.findByIdAndUpdate(_id, { deleted: false }, { new: true });
+    if (restoredCompany) {
+      res.status(200).json({ message: "Company restored successfully." });
     } else {
-      res.status(404).json({ error: "Deleted Technicians not found." });
+      res.status(404).json({ error: "Deleted company not found." });
     }
   } catch (error) {
     console.error("Error restoring company:", error);
