@@ -57,7 +57,7 @@ const Customer = new mongoose.Schema({
     },
     role: {
         type: String,
-    },
+    },   
     created_date: Date,
 });
 
