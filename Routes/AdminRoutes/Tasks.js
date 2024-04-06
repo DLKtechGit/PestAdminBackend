@@ -68,29 +68,29 @@ const Customer = require("../../Models/AdminSchema/CompanySchema")
 router.post('/createTask', async (req, res) => {
     try {
         const { customerId, technicianId, taskDetails } = req.body;
-
-        // Find the existing task for the same technician and customer
         const existingTask = await Task.findOne({
             customerId: customerId,
             'technicians.technicianId': technicianId
         });
 
-        if (existingTask) {
-            // Add the new task details to the existing task
+        if (existingTask) {           
             const technicianIndex = existingTask.technicians.findIndex(t => t.technicianId.toString() === technicianId);
             existingTask.technicians[technicianIndex].tasks.push(taskDetails);
             await existingTask.save();
             res.status(200).json({ message: 'Task added successfully', task: existingTask });
         } else {
-            // Create a new task document
+            const customerDetails = await Customer.findById(customerId);
+            //console.log("customerDetails",customerDetails);
             const newTask = new Task({
                 customerId: customerId,
+                customerDetails: customerDetails,
                 technicians: [{
                     technicianId: technicianId,
-                    tasks: [taskDetails]
+                    tasks: taskDetails ? [taskDetails] : []
                 }]
             });
             const savedTask = await newTask.save();
+            //  console.log("customerDetails-----------------------",savedTask);
             res.status(201).json({ message: 'Task created successfully', task: savedTask });
         }
     } catch (error) {
@@ -110,20 +110,10 @@ router.get('/getTasks', async (req, res) => {
     })
 })
 
-router.get('/getTasks', async (req, res) => {
-    var result = await Task.find()
-    // console.log("result====>", result);
-    res.statusMessage = "Technician Data fetched successfully..."
-    res.status(200).json({
-        Length: result.length,
-        Results: result
-    })
-})
-
 router.get('/start/taskcount', async (req, res) => {
     try {
         const startCount = await Task.countDocuments({ status: 'start' });
-       
+
         res.status(200).json({
             start: startCount,
         });
@@ -133,30 +123,29 @@ router.get('/start/taskcount', async (req, res) => {
     }
 });
 
-router.get('/ongoing/taskcount',async(req,res)=>{
-try {
-    const ongoingCount = await Task.countDocuments({status:'ongoing'})
-
-    res.status(200).json({
-        Ongoing:ongoingCount
-    })
-} catch (error) {
-    console.error('Error counting tasks by status:', error);
-        res.status(500).json({ error: 'Server error' });
-}
-})
-
-router.get('/completed/taskcount', async(req,res)=>{
+router.get('/ongoing/taskcount', async (req, res) => {
     try {
-        const CompletedTask = await Task.countDocuments({status:'completed'})
+        const ongoingCount = await Task.countDocuments({ status: 'ongoing' })
 
         res.status(200).json({
-            Completed:CompletedTask
+            Ongoing: ongoingCount
         })
     } catch (error) {
-         console.error('Error counting tasks by status:', error);
+        console.error('Error counting tasks by status:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+})
+
+router.get('/completed/taskcount', async (req, res) => {
+    try {
+        const CompletedTask = await Task.countDocuments({ status: 'completed' })
+
+        res.status(200).json({
+            Completed: CompletedTask
+        })
+    } catch (error) {
+        console.error('Error counting tasks by status:', error);
         res.status(500).json({ error: 'Server error' });
     }
 })
 module.exports = router;
- 

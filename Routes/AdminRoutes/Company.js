@@ -96,6 +96,45 @@ router.get("/getCompany", async (req, res) => {
   });
 });
 
+router.get("/getCompany/:id", async (req, res) => {
+  try {
+    const companyId = req.params.id; // Use req.params.id to extract the company ID
+    const result = await Company.findOne({ _id: companyId, role: "Customer", deleted: false });
+    
+    if (!result) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.status(200).json({
+      Result: result,
+    });
+  } catch (error) {
+    console.error("Error fetching company:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/getmoreCompany", async (req, res) => {
+  try {
+    const companyIds = req.query.ids; // Retrieve the IDs from query parameters
+    const idsArray = companyIds.split(","); // Split the IDs into an array
+    
+    const results = await Company.find({ _id: { $in: idsArray }, role: "Customer", deleted: false });
+    
+    if (!results || results.length === 0) {
+      return res.status(404).json({ message: "Companies not found" });
+    }
+
+    res.status(200).json({
+      Results: results,
+    });
+  } catch (error) {
+    console.error("Error fetching companies:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 router.post("/customerdelete/:id", async (req, res) => {
   try {
