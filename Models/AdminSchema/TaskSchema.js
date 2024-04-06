@@ -6,44 +6,60 @@ const TaskSchema = new mongoose.Schema({
         ref: 'Customer',
         required: true
     },
+    customerDetails: {
+        name: {
+            type: String,
+            // required: true
+        },
+        email: {
+            type: String,
+            unique: true,
+            // required: true
+        },
+        phoneNumber: {
+            type: String,
+            unique: true,
+            // required: true,
+        },
+    },
     technicians: [{
         technicianId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Technician',
-            required: true
+            // required: true
         },
         technicianDetails:{
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Technician',
         },
         tasks: [{
             serviceName: {
                 type: String,
-                required: true
+                // required: true
             },
             companyName: {
                 type: String,
-                required: true
+                // required: true
             },
             startDate: {
                 type: Date,
-                required: true
+                // required: true
             },
             endtime: {
                 type: Date,
-                required: true
+                // required: true
             },
             starttime: {
                 type: Date,
-                required: true
+                // required: true
             },
             description: {
                 type: String,
-                required: true
+                // required: true
             },
             status: {
                 type: String,
-                default: 'Pending'
+                default: 'start'
             }
         }]
     }]
