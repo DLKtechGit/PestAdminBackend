@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Qrcode = require('../../Models/AdminSchema/QrcodeSchema');
+const qrcode = require('../../Models/AdminSchema/TaskSchema');
 
-router.post('/create/qr', async (req, res) => {
+router.post('/createQr', async (req, res) => {
     const { qrTitle, serviceName, customerName, startDate, time, format, width, height, qrImage } = req.body;
-
-
     if (!qrTitle || !serviceName || !customerName || !startDate || !format || !width || !height) {
         return res.status(400).json({
             message: 'Missing some required data.'
@@ -13,15 +12,12 @@ router.post('/create/qr', async (req, res) => {
     }
 
     try {
-
         const existingQrcode = await Qrcode.findOne({ qrTitle });
         if (existingQrcode) {
             return res.status(409).json({
                 message: 'QR code already exists.'
             });
         }
-
-
         const newQrcode = new Qrcode({
             qrTitle: qrTitle,
             serviceName: serviceName,
@@ -33,10 +29,7 @@ router.post('/create/qr', async (req, res) => {
             format: format,
             created_date: new Date,
         });
-
-
         const savedQrcode = await newQrcode.save();
-
         res.status(201).json({
             message: 'QR code created successfully.',
             data: savedQrcode
@@ -92,7 +85,6 @@ router.post('/deleteQrcode/:id', async (req, res) => {
             })
         }
     }
-
     catch (err) {
         res.statusMessage = "Qrcode delete Failed..."
         res.status(400).json({

@@ -4,7 +4,7 @@ const TaskSchema = new mongoose.Schema({
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer',
-        required: true
+        // required: true
     },
     customerDetails: {
         name: {
@@ -20,7 +20,7 @@ const TaskSchema = new mongoose.Schema({
             type: String,
             unique: true,
             // required: true,
-        },
+        }
     },
     technicians: [{
         technicianId: {
@@ -28,7 +28,7 @@ const TaskSchema = new mongoose.Schema({
             ref: 'Technician',
             // required: true
         },
-        technicianDetails:{
+        technicianDetails: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Technician',
         },

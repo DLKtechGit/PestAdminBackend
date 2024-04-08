@@ -68,29 +68,32 @@ const Customer = require("../../Models/AdminSchema/CompanySchema")
 router.post('/createTask', async (req, res) => {
     try {
         const { customerId, technicianId, taskDetails } = req.body;
+
+        // Find the existing task for the same technician and customer
         const existingTask = await Task.findOne({
             customerId: customerId,
             'technicians.technicianId': technicianId
         });
 
-        if (existingTask) {           
+        if (existingTask) {
+            // Add the new task details to the existing task
             const technicianIndex = existingTask.technicians.findIndex(t => t.technicianId.toString() === technicianId);
             existingTask.technicians[technicianIndex].tasks.push(taskDetails);
             await existingTask.save();
             res.status(200).json({ message: 'Task added successfully', task: existingTask });
         } else {
+            // Create a new task document
             const customerDetails = await Customer.findById(customerId);
-            //console.log("customerDetails",customerDetails);
+
             const newTask = new Task({
                 customerId: customerId,
                 customerDetails: customerDetails,
                 technicians: [{
                     technicianId: technicianId,
-                    tasks: taskDetails ? [taskDetails] : []
+                    tasks: taskDetails ? [taskDetails] : []  // Only add taskDetails if it exists
                 }]
             });
             const savedTask = await newTask.save();
-            //  console.log("customerDetails-----------------------",savedTask);
             res.status(201).json({ message: 'Task created successfully', task: savedTask });
         }
     } catch (error) {
@@ -98,6 +101,7 @@ router.post('/createTask', async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 
 router.get('/getTasks', async (req, res) => {
@@ -109,10 +113,29 @@ router.get('/getTasks', async (req, res) => {
         Results: result
     })
 })
+router.get('/getcompletedTasks/:id', async (req, res) => {
+    const technicianId = req.params.id;
+    try {
+        // Find tasks with status 'completed' for the specified technician ID
+        const result = await Task.find({ 
+            'technicians.technicianId': technicianId, 
+            'technicians.tasks.status': 'completed' 
+        });
+
+        res.statusMessage = "Completed tasks fetched successfully.";
+        res.status(200).json({
+            Length: result.length,
+            Results: result
+        });
+    } catch (error) {
+        console.error("Error fetching completed tasks:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 router.get('/start/taskcount', async (req, res) => {
     try {
-        const startCount = await Task.countDocuments({ status: 'start' });
+        const startCount = await Task.countDocuments({ 'technicians.tasks.status': 'start' });
 
         res.status(200).json({
             start: startCount,
@@ -123,9 +146,11 @@ router.get('/start/taskcount', async (req, res) => {
     }
 });
 
+
+
 router.get('/ongoing/taskcount', async (req, res) => {
     try {
-        const ongoingCount = await Task.countDocuments({ status: 'ongoing' })
+        const ongoingCount = await Task.countDocuments({ 'technicians.tasks.status': 'ongoing' })
 
         res.status(200).json({
             Ongoing: ongoingCount
@@ -138,7 +163,7 @@ router.get('/ongoing/taskcount', async (req, res) => {
 
 router.get('/completed/taskcount', async (req, res) => {
     try {
-        const CompletedTask = await Task.countDocuments({ status: 'completed' })
+        const CompletedTask = await Task.countDocuments({'technicians.tasks.status':'completed' })
 
         res.status(200).json({
             Completed: CompletedTask

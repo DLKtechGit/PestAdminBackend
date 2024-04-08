@@ -1,42 +1,101 @@
 const express = require('express');
 const router = express.Router();
-// const user = require("../modals/Users")
+const multer = require('multer')
+const path = require('path')
 const createServices = require("../../Models/AdminSchema/CreateServiceModal")
 
-router.post('/createService', async (req, res) => {
+let FileContent = ''
 
-    let { serviceName } = req.body
-
-    if (!serviceName) {
-        res.statusMessage = "Missing some required Data....."
-        return res.status(201).json()
+const DIR = './uploads/';
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, DIR);
+    },
+    filename: (req, file, cb) => {
+        const fileName = file.originalname.toLowerCase().split(' ').join('-');
+        // console.log("filename", fileName)
+        const public = path.join(__dirname, "..", 'uploads', fileName);
+        FileContent = public
+        cb(null, fileName)
     }
-
-    try {
-        let CheckServiceName = await createServices.findOne({ serviceName: serviceName })
-        if (CheckServiceName) {          
-            res.status(403).json({ message: "Service Already Found... Try another Name" })
+});
+var upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+            cb(null, true);
         } else {
-            const newServices = new createServices({
-                serviceName: serviceName,
-                created_date: new Date,
-            })
-            let result = await newServices.save()
-
-            if (result) {
-                res.statusMessage = "New Service created Successfully..."
-                res.status(200).json({
-                    data: result
-                })
-            }
+            cb(null, false);
+            return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
         }
     }
-    catch (err) {
-        res.statusMessage = "Service creation Failed..."
-        res.status(400).json({
-        })
+});
+
+router.post('/createService', upload.single('serviceImage'), async (req, res) => {
+    const { serviceName } = req.body;
+    const serviceImage = req.file;
+
+    try {
+        if (!serviceName || !serviceImage) {
+            return res.status(400).json({ error: "Missing required data" });
+        }
+
+        let checkServiceName = await createServices.findOne({ serviceName: serviceName });
+        if (checkServiceName) {          
+            return res.status(403).json({ message: "Service already exists. Please choose another name." });
+        }
+
+        const newService = new createServices({
+            serviceName: serviceName,
+            serviceImage: serviceImage.filename,
+            created_date: new Date(),
+        });
+
+        let result = await newService.save();
+
+        if (result) {
+            return res.status(200).json({ message: "New service created successfully", data: result });
+        }
+    } catch (error) {
+        console.error("Service creation failed:", error);
+        return res.status(500).json({ error: "Server error" });
     }
-})
+});
+
+// router.post('/createService', async (req, res) => {
+
+//     let { serviceName } = req.body
+
+//     if (!serviceName ) {
+//         res.statusMessage = "Missing some required Data....."
+//         return res.status(201).json()
+//     }
+
+//     try {
+//         let CheckServiceName = await createServices.findOne({ serviceName: serviceName })
+//         if (CheckServiceName) {          
+//             res.status(403).json({ message: "Service Already Found... Try another Name" })
+//         } else {
+//             const newServices = new createServices({
+//                 serviceName: serviceName,
+//                 created_date: new Date,
+//             })
+//             let result = await newServices.save()
+
+//             if (result) {
+//                 res.statusMessage = "New Service created Successfully..."
+//                 res.status(200).json({
+//                     data: result
+//                 })
+//             }
+//         }
+//     }
+//     catch (err) {
+//         res.statusMessage = "Service creation Failed..."
+//         res.status(400).json({
+//         })
+//     }
+// })
 
 router.get('/getServices', async (req, res) => {
     var result = await createServices.find()
