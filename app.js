@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const { DB_CONNECTION_URL } = require('./env/env')
 const app = express();
+const path = require('path')
 
 const CreateServices = require("./Routes/AdminRoutes/CreateService")
 const CompanyData = require("./Routes/AdminRoutes/Company")
@@ -28,6 +29,7 @@ app.use('/task', Tasks);
 app.use('/adminauth', Admin);
 app.use('/otherauth', OtherAuth);
 app.use('/qrcode',Qrcode)
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
 
 mongoose.connect(DB_CONNECTION_URL, {

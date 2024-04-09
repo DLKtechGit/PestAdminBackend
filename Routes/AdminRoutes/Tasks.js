@@ -113,25 +113,50 @@ router.get('/getTasks', async (req, res) => {
         Results: result
     })
 })
+
 router.get('/getcompletedTasks/:id', async (req, res) => {
     const technicianId = req.params.id;
     try {
-        // Find tasks with status 'completed' for the specified technician ID
-        const result = await Task.find({ 
-            'technicians.technicianId': technicianId, 
-            'technicians.tasks.status': 'completed' 
-        });
+        // Find the technician with the specified ID
+        const technician = await Technician.findOne({ technicianId });
+
+        if (!technician) {
+            return res.status(404).json({ message: "Technician not found" });
+        }
+
+        // Filter completed tasks for the specified technician
+        const completedTasks = technician.tasks.filter(task => task.status === 'completed');
 
         res.statusMessage = "Completed tasks fetched successfully.";
         res.status(200).json({
-            Length: result.length,
-            Results: result
+            Length: completedTasks.length,
+            Results: completedTasks
         });
     } catch (error) {
         console.error("Error fetching completed tasks:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
+
+// router.get('/getcompletedTasks/:id', async (req, res) => {
+//     const technicianId = req.params.id;
+//     try {
+//         // Find tasks with status 'completed' for the specified technician ID
+//         const result = await Task.find({ 
+//             'technicians.technicianId': technicianId, 
+//             'technicians.tasks.status': 'completed' 
+//         });
+
+//         res.statusMessage = "Completed tasks fetched successfully.";
+//         res.status(200).json({
+//             Length: result.length,
+//             Results: result
+//         });
+//     } catch (error) {
+//         console.error("Error fetching completed tasks:", error);
+//         res.status(500).json({ message: "Internal server error" });
+//     }
+// });
 
 router.get('/start/taskcount', async (req, res) => {
     try {

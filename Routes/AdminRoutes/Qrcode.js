@@ -4,31 +4,35 @@ const Qrcode = require('../../Models/AdminSchema/QrcodeSchema');
 const qrcode = require('../../Models/AdminSchema/TaskSchema');
 
 router.post('/createQr', async (req, res) => {
-    const { qrTitle, serviceName, customerName, startDate, time, format, width, height, qrImage } = req.body;
-    if (!qrTitle || !serviceName || !customerName || !startDate || !format || !width || !height) {
+    const { qrTitles, serviceName, customerName, startDate, time, format, width, height, numQRCodes, qrImage } = req.body;
+    if (!qrTitles || !serviceName || !customerName || !startDate || !format || !width || !numQRCodes || !height) {
         return res.status(400).json({
             message: 'Missing some required data.'
         });
     }
 
     try {
-        const existingQrcode = await Qrcode.findOne({ qrTitle });
-        if (existingQrcode) {
+        const existingQrcodes = await Qrcode.find({ qrTitles: { $in: qrTitles } });
+        if (existingQrcodes.length > 0) {
             return res.status(409).json({
-                message: 'QR code already exists.'
+                message: 'QR code titles already exist.'
             });
         }
+
         const newQrcode = new Qrcode({
-            qrTitle: qrTitle,
-            serviceName: serviceName,
-            customerName: customerName,
-            startDate: startDate,
-            width: width,
-            height: height,
-            qrImage: qrImage,
-            format: format,
-            created_date: new Date,
+            qrTitles,
+            serviceName,
+            customerName,
+            startDate,
+            time,
+            format,
+            width,
+            height,
+            qrImage,
+            numQRCodes,
+            created_date: new Date()
         });
+
         const savedQrcode = await newQrcode.save();
         res.status(201).json({
             message: 'QR code created successfully.',
