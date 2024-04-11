@@ -4,36 +4,38 @@ const Qrcode = require('../../Models/AdminSchema/QrcodeSchema');
 const qrcode = require('../../Models/AdminSchema/TaskSchema');
 
 router.post('/createQr', async (req, res) => {
-    const { qrTitles, serviceName, customerName, startDate, time, format, width, height, numQRCodes, qrImage } = req.body;
-    if (!qrTitles || !serviceName || !customerName || !startDate || !format || !width || !numQRCodes || !height) {
+    const { qrTitle, titles, customerName, startDate, format, width, height, numQRCodes } = req.body;
+    if (!qrTitle || !titles || !customerName || !startDate || !format || !width || !height || !numQRCodes) {
         return res.status(400).json({
             message: 'Missing some required data.'
         });
     }
 
     try {
-        const existingQrcodes = await Qrcode.find({ qrTitles: { $in: qrTitles } });
-        if (existingQrcodes.length > 0) {
+        // Check if the QR code title already exists
+        const existingQrcode = await Qrcode.findOne({ 'qrTitle': qrTitle });
+        if (existingQrcode) {
             return res.status(409).json({
-                message: 'QR code titles already exist.'
+                message: 'QR code title already exists.'
             });
         }
 
+        // Create a new QR code document
         const newQrcode = new Qrcode({
-            qrTitles,
-            serviceName,
+            qrTitle,
+            titles,
             customerName,
             startDate,
-            time,
             format,
             width,
             height,
-            qrImage,
             numQRCodes,
             created_date: new Date()
         });
 
+        // Save the new QR code document
         const savedQrcode = await newQrcode.save();
+
         res.status(201).json({
             message: 'QR code created successfully.',
             data: savedQrcode
@@ -45,6 +47,7 @@ router.post('/createQr', async (req, res) => {
         });
     }
 });
+
 
 router.get("/getQrcode", async (req, res) => {
     try {
@@ -104,5 +107,94 @@ router.get('/totalQrcodes', async (req, res) => {
       res.status(500).json({ message: err.message });
     }
   });
+
+//   router.post('/deleteQrcodes/:id', async (req, res) => {
+//     const { id } = req.params;
+//     const { titles } = req.body;
+
+//     if (!id || !titles) {
+//         return res.status(400).json({ error: 'Missing required data.' });
+//     }
+
+//     try {
+//         const result = await Qrcode.findByIdAndUpdate(
+//             id,
+//             { $pull: { titles: titles } },
+//             { new: true }
+//         );
+
+//         if (!result) {
+//             return res.status(404).json({ error: 'QR code not found.' });
+//         }
+
+//         res.status(200).json({ message: 'QR code title deleted successfully.', data: result });
+//     } catch (error) {
+//         console.error('Error deleting QR code title:', error);
+//         res.status(500).json({ error: 'Internal server error.' });
+//     }
+// });
+
+
+
+router.post('/deleteTitle', async (req, res) => {
+    const { qrId, titleId } = req.body;
+
+    try {
+        // Find the QRCode document by its ID
+        const qrCode = await Qrcode.findById(qrId);
+
+        if (!qrCode) {
+            return res.status(404).json({
+                message: 'QR code not found.'
+            });
+        }
+
+        // Pull the title object with the given titleId from the titles array
+        qrCode.titles.pull({ _id: titleId });
+
+        // Check if titles array is empty after deletion
+        if (qrCode.titles.length === 0) {
+            // If titles array is empty, delete the QR code document
+            await Qrcode.findByIdAndDelete(qrId);
+            return res.status(200).json({
+                message: 'QR code and title deleted successfully.'
+            });
+        } else {
+            // Save the updated QRCode document if titles array is not empty
+            await qrCode.save();
+            return res.status(200).json({
+                message: 'Title deleted successfully.',
+                data: qrCode  // Send the updated QR code details in the response
+            });
+        }
+    } catch (error) {
+        console.error('Error deleting title:', error);
+        res.status(500).json({
+            message: 'Internal server error.'
+        });
+    }
+});
+
+
+
+
+router.get('/getQrcodeById/:id', async (req, res) => {
+
+
+    try {
+        const qrcode = await Qrcode.findById({_id:req.params.id});
+        
+        if (!qrcode) {
+            return res.status(404).json({ error: 'QR code not found.' });
+        }
+
+        res.status(200).json({ message: 'QR code fetched successfully.', data: qrcode });
+    } catch (error) {
+        console.error('Error fetching QR code by ID:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+});
+
+
 
 module.exports = router;

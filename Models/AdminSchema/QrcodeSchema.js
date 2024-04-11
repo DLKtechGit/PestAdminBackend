@@ -1,21 +1,25 @@
 const mongoose = require('mongoose');
 
 const qrCodeSchema = new mongoose.Schema({
-    qrTitles: [{
-        type: String,
-        required: true
+    qrTitle: {
+        type: String
+    },
+    titles: [{
+       
+        title: { type: String },
+        // Other properties if needed
     }],
     serviceName: {
         type: String,
-        required: true
+        // required: true
     },
     customerName: {
         type: String,
-        required: true
+        // required: true
     },
     startDate: {
         type: String,
-        required: true
+        // required: true
     },
     time: {
         type: String,
@@ -23,25 +27,23 @@ const qrCodeSchema = new mongoose.Schema({
     },
     format: {
         type: String,
-        required: true
+        // required: true
     },
     width: {
         type: String,
-        required: true
+        // required: true
     },
     height: {
         type: String,
-        required: true
+        // required: true
     },
     qrImage: {
         type: String,
     },
-
     numQRCodes: {
         type: String,
-        required: true
-    }
-    ,
+        // required: true
+    },
     created_date: {
         type: Date,
         default: Date.now
