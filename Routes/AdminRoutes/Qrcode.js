@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Qrcode = require('../../Models/AdminSchema/QrcodeSchema');
 const qrcode = require('../../Models/AdminSchema/TaskSchema');
+const Customer = require('../../Models/AdminSchema/CompanySchema')
 
 router.post('/createQr', async (req, res) => {
-    const { qrTitle, titles, customerName, startDate, format, width, height, numQRCodes } = req.body;
-    if (!qrTitle || !titles || !customerName || !startDate || !format || !width || !height || !numQRCodes) {
+    const { qrTitle, serviceName, titles, customerId, startDate, customerName ,format, width, height, numQRCodes } = req.body;
+    if (!qrTitle || !titles || !serviceName || !customerId || !customerName || !startDate || !format || !width || !height || !numQRCodes) {
         return res.status(400).json({
             message: 'Missing some required data.'
         });
@@ -20,11 +21,21 @@ router.post('/createQr', async (req, res) => {
             });
         }
 
-        // Create a new QR code document
+        // Fetch customer details using customerId
+        const customer = await Customer.findById(customerId);
+        if (!customer) {
+            return res.status(404).json({
+                message: 'Customer not found.'
+            });
+        }
+
+        // Create a new QR code document with customer details
         const newQrcode = new Qrcode({
             qrTitle,
             titles,
             customerName,
+            customerId,
+            serviceName,
             startDate,
             format,
             width,
@@ -34,12 +45,17 @@ router.post('/createQr', async (req, res) => {
         });
 
         // Save the new QR code document
-        const savedQrcode = await newQrcode.save();
+const savedQrcode = await newQrcode.save();
 
-        res.status(201).json({
-            message: 'QR code created successfully.',
-            data: savedQrcode
-        });
+// Update the available field to 'YES'
+savedQrcode.available = 'YES';
+await savedQrcode.save();
+
+res.status(201).json({
+    message: 'QR code created successfully.',
+    data: savedQrcode
+});
+
     } catch (error) {
         console.error('Error creating QR code:', error);
         res.status(500).json({
@@ -47,7 +63,6 @@ router.post('/createQr', async (req, res) => {
         });
     }
 });
-
 
 router.get("/getQrcode", async (req, res) => {
     try {
