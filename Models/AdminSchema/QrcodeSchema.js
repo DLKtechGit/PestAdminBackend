@@ -19,7 +19,7 @@ const qrCodeSchema = new mongoose.Schema({
     },
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer', // Reference to your Customer model
+        ref: 'Customer', 
         // required: true
     },
     startDate: {
@@ -43,11 +43,10 @@ const qrCodeSchema = new mongoose.Schema({
     },
     numQRCodes: {
         type: Number,
-        // required: true
     },
     available: {
         type: String,
-        default: 'NO' // Default value set to 'NO'
+        default: 'NO' 
     },
     created_date: {
         type: Date,
