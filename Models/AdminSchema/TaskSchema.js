@@ -28,11 +28,24 @@ const TaskSchema = new mongoose.Schema({
             ref: 'Technician',
             // required: true
         },
-        technicianDetails: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Technician',
-        },
+       
         tasks: [{
+            technicianDetails: {
+                firstName: {
+                    type: String,
+                    // required: true
+                },
+                lastName: {
+                    type: String,
+                    // required: true
+                },
+                email:{
+                    type: String,
+                }               
+            },
+            otherTechnicianName:{
+                type: String,
+            },
             serviceName: {
                 type: String,
                 // required: true
@@ -41,15 +54,24 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 // required: true
             },
+            technicianStartDate:{
+                type: Date,
+            },
+            technicianStartTime:{
+                type: String,
+            },
+            pauseReason:{
+                type: String,
+            },
             startDate: {
                 type: Date,
                 // required: true
             },
-            endtime: {
+            starttime: {
                 type: Date,
                 // required: true
             },
-            starttime: {
+            endtime: {
                 type: Date,
                 // required: true
             },
@@ -59,8 +81,41 @@ const TaskSchema = new mongoose.Schema({
             },
             status: {
                 type: String,
-                default: 'start'
-            }
+                default: 'Yet to Start'
+            },
+            completedDetails: {
+                chemicalsName: [{
+                    type: String,
+                    default: "No Chemaical name"
+                }],
+                recommendation: {
+                    type: String,
+                },              
+                firstName: {
+                    type: String,
+                },
+                lastName: {
+                    type: String,
+                },
+                techSign:{
+                    type: String,
+                    default:"Not Signed"
+                },
+                name:{
+                    type: String,
+                },
+                customerAvailble:{
+                    type: String,
+                    default:"false"
+                },
+                customerSign:{
+                    type: String,
+                    default:"Not Signed"
+                },   
+                endTime:{
+                    type: String,
+                },        
+            },
         }]
     }]
 });

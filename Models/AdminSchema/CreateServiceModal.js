@@ -6,9 +6,9 @@ const CreateService = new mongoose.Schema({
         required: true
     }, 
     serviceImage: {
-        name: String,
-        contentType: String,
-        imageUrl: String,
+        type: String,
+        // contentType: String,
+        // imageUrl: String,
     },
     created_date: Date,     
 });
