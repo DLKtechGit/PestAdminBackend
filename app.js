@@ -12,6 +12,7 @@ const Tasks = require("./Routes/AdminRoutes/Tasks")
 const Admin = require("./Routes/AdminRoutes/AdminAuth")
 const OtherAuth = require("./Routes/AdminRoutes/OtherAuth")
 const Qrcode = require("./Routes/AdminRoutes/Qrcode")
+const Chemicals = require("./Routes/AdminRoutes/CreateChemicals")
 // const report = require ("./Routes/AdminRoutes/Report")
 
 app.get("/", (req, res) => {
@@ -29,6 +30,7 @@ app.use('/task', Tasks);
 app.use('/adminauth', Admin);
 app.use('/otherauth', OtherAuth);
 app.use('/qrcode',Qrcode)
+app.use('/chemicals',Chemicals)
 // app.use('/report',report)
 
 

@@ -253,7 +253,16 @@ router.post("/deletedcompany/restore/:id", async (req, res) => {
 
 router.get('/totalcompany', async (req, res) => {
   try {
-    const totalCustomers = await Company.countDocuments();
+    const totalCustomers = await Company.countDocuments({role:"Customer"});
+    res.json({ totalCustomers });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get('/totalTechnician', async (req, res) => {
+  try {
+    const totalCustomers = await Company.countDocuments({role:"Technician"});
     res.json({ totalCustomers });
   } catch (err) {
     res.status(500).json({ message: err.message });
