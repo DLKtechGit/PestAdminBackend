@@ -137,7 +137,7 @@ router.post("/delete/:id", async (req, res) => {
 
 router.get("/all/deletedTechnician", async (req, res) => {
   try {
-    const DeletedTechlnicians = await Technician.find({ deleted: true })
+    const DeletedTechlnicians = await Technician.find({ deleted: true,role: "Technician" })
 
     if (DeletedTechlnicians?.length > 0) {
       res.status(200).json({

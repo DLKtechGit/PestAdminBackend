@@ -2,6 +2,66 @@ const express = require("express");
 const router = express.Router();
 const Task = require("../../Models/AdminSchema/TaskSchema");
 const Customer = require("../../Models/AdminSchema/CompanySchema");
+const nodemailer = require("nodemailer")
+
+
+
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: "pestcontrol633@gmail.com",
+      pass: "acof axql bhdv yats",
+    },
+  });
+  
+router.post("/subtionmail",async (req,res)=>{
+    const {email} = req.body
+
+    try {
+        const customer = await Customer.findOne({email})
+        if(!customer){
+            return res.status(404).json({error:"Customr not found "})
+        }
+
+       
+        const mailOptions={
+            from:"dlktechnologiesreact@gmail.com",
+            to: email,
+            subject:"Pest Patrol Service Report",
+            html:`
+            <p>Hi ${customer.name}, </p>
+
+            <p> We're delighted to provide you with a summary of your recent service from Pest Patrol. The service report attached with this mail for your reference. </p>
+
+
+
+
+            <p> If you have any questions or need further assistance, feel free to reply to this email. We're here to help! </p>
+            
+            <p>Wishing you a pest-free environment! </p>
+
+            <img src="https://t4.ftcdn.net/jpg/04/84/47/27/240_F_484472702_acpl3SZTBwb2Al4ZiW8VusICp7Utl8ed.jpg" alt="Pest Patrol Logo" />
+
+            <p>Warm regards,</p>
+            <p>The Pest Patrol Team</p>
+
+            `
+        }
+
+        await transporter.sendMail(mailOptions)
+        console.log("Pest Patrol Service Reportemail sent successfully.")
+
+        res.status(200).json({
+            message:"Pest Patrol Service Reportemail sent successfully."
+        })
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+})
+
+
+
 
 router.post("/createTask", async (req, res) => {
   try {
@@ -253,47 +313,6 @@ router.post("/updateCompletedStatus", async (req, res) => {
 
 
 
-// router.post("/updateTaskStatus", async (req, res) => {
-//     try {
-//       const { taskItemId, taskId, status, technicianStartDate, technicianStartTime,pauseReason } = req.body;
-//       const taskToUpdate = await Task.findOne({
-//         _id: taskId,
-//         "technicians.tasks._id": taskItemId,
-//       });
-
-//       if (!taskToUpdate) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
-//         tech.tasks.some((task) => task._id.equals(taskItemId))
-//       );
-
-//       if (technicianIndex === -1) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
-//         (task) => task._id.equals(taskItemId)
-//       );
-
-//       if (taskIndex === -1) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartDate = technicianStartDate;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartTime = technicianStartTime;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].pauseReason = pauseReason;
-
-//       await taskToUpdate.save();
-
-//       res.status(200).json({
-//         message: "Task status updated successfully",
-//         updatedTask: taskToUpdate,
-//       });
-//     } catch (error) {
-//       console.error("Error updating task status:", error);
-//       res.status(500).json({ error: "Server error" });
-//     }
-//   });
 
 router.get("/start/taskcount", async (req, res) => {
   try {

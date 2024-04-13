@@ -33,7 +33,8 @@ app.use('/otherauth', OtherAuth);
 app.use('/qrcode',Qrcode)
 app.use('/chemicals',Chemicals)
 // app.use('/report',report)
-
+app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+app.use('/EmailImgs', express.static(path.join(__dirname, '/EmailImgs')));
 
 mongoose.connect(DB_CONNECTION_URL, {
     useNewUrlParser: true  
