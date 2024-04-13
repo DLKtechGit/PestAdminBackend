@@ -32,9 +32,7 @@ const upload = multer({
   },
 });
 
-router.post(
-  "/createService",
-  upload.single("serviceImage"),
+router.post("/createService",upload.single("serviceImage"),
   async (req, res) => {
     const { serviceName } = req.body;
     const serviceImage = req.file;

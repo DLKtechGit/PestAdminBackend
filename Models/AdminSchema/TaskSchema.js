@@ -13,14 +13,30 @@ const TaskSchema = new mongoose.Schema({
         },
         email: {
             type: String,
-            unique: true,
+            // unique: true,
             // required: true
         },
         phoneNumber: {
             type: String,
             unique: true,
             // required: true,
-        }
+        },
+        address: {
+            type: String,
+            // required: true
+        },
+        country: {
+            type: String,
+            // required: true
+        },
+        state: {
+            type: String,
+            // required: true
+        },
+        city: {
+            type: String,
+            // required: true
+        },
     },
     technicians: [{
         technicianId: {
@@ -83,6 +99,13 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 default: 'Yet to Start'
             },
+            numQRCodes: {
+                type: Number,
+            }, 
+            available: {
+                type: String,
+                default: 'NO' 
+            },
             completedDetails: {
                 chemicalsName: [{
                     type: String,
@@ -99,7 +122,7 @@ const TaskSchema = new mongoose.Schema({
                 },
                 techSign:{
                     type: String,
-                    default:"Not Signed"
+                    // default:"Not Signed"
                 },
                 name:{
                     type: String,
@@ -110,7 +133,7 @@ const TaskSchema = new mongoose.Schema({
                 },
                 customerSign:{
                     type: String,
-                    default:"Not Signed"
+                    // default:"Not Signed"
                 },   
                 endTime:{
                     type: String,

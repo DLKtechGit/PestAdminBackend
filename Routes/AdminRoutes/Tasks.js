@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 const Task = require("../../Models/AdminSchema/TaskSchema");
 const Customer = require("../../Models/AdminSchema/CompanySchema");
+const puppeteer = require("puppeteer");
+const moment = require("moment");
+const { writeFile } = require("fs");
+const crypto = require("crypto");
 
 router.post("/createTask", async (req, res) => {
   try {
@@ -15,7 +19,10 @@ router.post("/createTask", async (req, res) => {
       const technicianIndex = existingTask.technicians.findIndex(
         (t) => t.technicianId.toString() === technicianId
       );
-      existingTask.technicians[technicianIndex].tasks.push(taskDetails);
+      existingTask.technicians[technicianIndex].tasks.push({
+        ...taskDetails,
+        technicianDetails: await Customer.findById(technicianId),
+      });
       await existingTask.save();
       res
         .status(200)
@@ -23,7 +30,6 @@ router.post("/createTask", async (req, res) => {
     } else {
       const customerDetails = await Customer.findById(customerId);
       const technicianDetails = await Customer.findById(technicianId);
-      //   console.log("technicianDetails", technicianDetails);
 
       const newTask = new Task({
         customerId: customerId,
@@ -68,7 +74,7 @@ router.get("/getTask/:taskId", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
     const specificTaskItem = task.technicians.reduce((acc, technician) => {
-      const foundTask = technician.tasks.find(task => task._id == taskId);
+      const foundTask = technician.tasks.find((task) => task._id == taskId);
       return foundTask ? foundTask : acc;
     }, null);
 
@@ -83,24 +89,73 @@ router.get("/getTask/:taskId", async (req, res) => {
   }
 });
 
-router.get("/getcompletedTasks", async (req, res) => {
-  const { technicianId } = req.body;
-  try {
-    const result = await Task.find({
-      "technicians.tasks.status": "completed",
-      "technicians.technicianId": technicianId,
-    }).populate("technicians.tasks");
+// router.get("/getcompletedTasks/:_id/:taskItemId", async (req, res) => {
+//   const { technicianId } = req.params;
+//   const { taskItemId } = req.params;
+//   try {
+//     const result = await Task.findOne({
+//       "technicians.tasks._id": taskItemId,
+//       "technicians.tasks.status": "completed",
+//       "technicians.technicianId": technicianId,
+//     }).populate("technicians.tasks");
 
-    res.statusMessage = "Completed tasks fetched successfully.";
+//     if (!result) {
+//       return res.status(404).json({ message: "Completed task not found" });
+//     }
+
+//     res.statusMessage = "Completed task fetched successfully.";
+//     res.status(200).json({
+//       Result: result,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching completed task:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// });
+
+router.get("/getcompletedTasks/:_id/:taskItemId", async (req, res) => {
+  const { technicianId, taskItemId } = req.params;
+  try {
+    const result = await Task.findOne({
+      "technicians": {
+        $elemMatch: {
+          "technicianId": technicianId,
+          "tasks": {
+            $elemMatch: {
+              "_id": taskItemId,
+              "status": "completed"
+            }
+          }
+        }
+      }
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "Completed task not found" });
+    }
+
+    // Extract the specific completed task from the result
+    const technician = result.technicians.find(t => t.technicianId === technicianId);
+    if (!technician) {
+      return res.status(404).json({ message: "Technician not found" });
+    }
+
+    const completedTask = technician.tasks.find(task => task._id.equals(taskItemId));
+    if (!completedTask || completedTask.status !== "completed") {
+      return res.status(404).json({ message: "Completed task not found" });
+    }
+
+    res.statusMessage = "Completed task fetched successfully.";
     res.status(200).json({
-      Length: result.length,
-      Results: result,
+      Result: completedTask,
     });
   } catch (error) {
-    console.error("Error fetching completed tasks:", error);
+    console.error("Error fetching completed task:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
 
 router.post("/updateTaskOtherTechnicianName", async (req, res) => {
   try {
@@ -110,8 +165,6 @@ router.post("/updateTaskOtherTechnicianName", async (req, res) => {
     console.log("Received taskItemId:", taskItemId);
 
     const task = await Task.findById(taskId);
-
-    // console.log("Found task:", task);
 
     if (!task) {
       console.log("Task not found");
@@ -227,6 +280,64 @@ router.post("/updateCompletedStatus", async (req, res) => {
       return res.status(404).json({ error: "Task not found" });
     }
 
+    const techSignBase64 = completedDetails.techSign.split(",")[1];
+    const customerSignBase64 = completedDetails.customerSign.split(",")[1];
+
+    const CustomerName = taskToUpdate.customerDetails.name;
+
+    const PhoneNumber = taskToUpdate.customerDetails.phoneNumber;
+
+    const Address =
+      taskToUpdate.customerDetails.address +
+      ", " +
+      taskToUpdate.customerDetails.city +
+      ", " +
+      taskToUpdate.customerDetails.country +
+      ", " +
+      taskToUpdate.customerDetails.state;
+
+    const serviceName =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex].serviceName;
+
+    const StartDate = moment(
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .technicianStartDate
+    ).format("DD-MMM-YYYY");
+
+    const StartTime =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .technicianStartTime;
+
+    const timeStamp = StartDate + StartTime;
+
+    const Recommendation =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .completedDetails.recommendation;
+
+    const Techsign =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .completedDetails.techSign;
+
+    const CustomerSign =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .completedDetails.customerSign;
+
+    // console.log("Techsign", Techsign);
+
+    const TechnicianfirstName =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .technicianDetails.firstName;
+
+    const TechnicianlastName =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .technicianDetails.lastName;
+
+    const TechnicianName = TechnicianfirstName + " " + TechnicianlastName;
+
+    const OtherTechnicianName =
+      taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
+        .otherTechnicianName;
+
     taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status;
     // Update completedDetails
     taskToUpdate.technicians[technicianIndex].tasks[
@@ -234,24 +345,72 @@ router.post("/updateCompletedStatus", async (req, res) => {
     ].completedDetails = {
       chemicalsName: completedDetails.chemicalsName,
       recommendation: completedDetails.recommendation,
-      techSign: completedDetails.techSign,
+      techSign: techSignBase64,
       customerAvailble: completedDetails.customerAvailble,
-      customerSign: completedDetails.customerSign,
+      customerSign: customerSignBase64,
     };
 
     await taskToUpdate.save();
 
+    const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">${StartDate}</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
+    const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>11.00 pm</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${CustomerSign}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${Techsign}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>  ${OtherTechnicianName}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${Recommendation}</td></tr></table></center>`;
+    const footer =
+      '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
+    const html = header + body + footer;
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(html);
+    await page.addStyleTag({
+      content: `
+        .watermark {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0.2; /* Adjust opacity as needed */
+          pointer-events: none;
+          background-image: url('http://localhost:4000/images/logo.png');
+          background-repeat: no-repeat;
+          background-size: contain; /* Adjust sizing as needed */
+          background-position: center; /* Adjust position as needed */
+        }
+      `,
+    });
+
+    await page.evaluate(() => {
+      const watermarkDiv = document.createElement("div");
+      watermarkDiv.className = "watermark";
+      document.body.appendChild(watermarkDiv);
+    });
+    const pdfBuffer = await page.pdf();
+    await browser.close();
+    //return pdfBuffer;
+    //res.setHeader("Content-Type", "application/pdf");
+    //res.setHeader('Content-Disposition', 'attachment; filename="output.pdf"');
+    //res.send(pdfBuffer);
+    const randomNumber = crypto.randomInt(100000, 999999);
+    const fileName = `${randomNumber}.pdf`;
+    const full_fileName = `reports/${fileName}`;
+    writeFile(full_fileName, pdfBuffer, {}, (err) => {
+      if (err) {
+        return console.error("error");
+      }
+
+      console.log("success!");
+    });
+    //res.setHeader("Content-Type", "application/pdf");
+    //res.setHeader('Content-Disposition', 'attachment; filename="output.pdf"');
     res.status(200).json({
-      message: "Task status and completed details updated successfully",
-      updatedTask: taskToUpdate,
+      fullFileName: `http://localhost:4000/${full_fileName}`,
+      fileName: fileName,
     });
   } catch (error) {
     console.error("Error updating task status:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
-
-
 
 // router.post("/updateTaskStatus", async (req, res) => {
 //     try {
