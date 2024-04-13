@@ -76,11 +76,11 @@ router.post("/reset-password", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
     const { id } = req.params;
     const existingAdmin = await Auth.findOneAndUpdate(
       { email },
-      { $set: { password, role, registered: true } }
+      { $set: { password,  registered: true } }
     );
 
     res.status(200).json({ message: "Customer registered successfully" });

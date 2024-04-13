@@ -38,6 +38,7 @@ app.use('/reports', express.static(path.join(__dirname, '/reports')));
 app.use('/chemicals',Chemicals)
 app.use('/pdf',Pdf)
 
+app.use('/EmailImgs', express.static(path.join(__dirname, '/EmailImgs')));
 
 mongoose.connect(DB_CONNECTION_URL, {
     useNewUrlParser: true  

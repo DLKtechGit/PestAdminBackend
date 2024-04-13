@@ -184,7 +184,7 @@ router.post("/customerdelete/:id", async (req, res) => {
 
 router.get("/getall/deletedcompany", async (req, res) => {
   try {
-    const DeletedCustomers = await Company.find({ deleted: true }); // Filter only deleted companies
+    const DeletedCustomers = await Company.find({ deleted: true,role: "Customer"}); // Filter only deleted companies
     if (DeletedCustomers?.length > 0) {
       res.status(200).json({
         success: true,
@@ -253,7 +253,7 @@ router.post("/deletedcompany/restore/:id", async (req, res) => {
 
 router.get('/totalcompany', async (req, res) => {
   try {
-    const totalCustomers = await Company.countDocuments({role:"Customer"});
+    const totalCustomers = await Company.countDocuments({role:"Customer", deleted:false});
     res.json({ totalCustomers });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -262,7 +262,7 @@ router.get('/totalcompany', async (req, res) => {
 
 router.get('/totalTechnician', async (req, res) => {
   try {
-    const totalCustomers = await Company.countDocuments({role:"Technician"});
+    const totalCustomers = await Company.countDocuments({role:"Technician",deleted:false});
     res.json({ totalCustomers });
   } catch (err) {
     res.status(500).json({ message: err.message });
