@@ -71,7 +71,7 @@ const TaskSchema = new mongoose.Schema({
                 // required: true
             },
             technicianStartDate:{
-                type: Date,
+                type: String,
             },
             technicianStartTime:{
                 type: String,
@@ -80,15 +80,15 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
             },
             startDate: {
-                type: Date,
-                // required: true
+                type: String,
+                // required: true 
             },
             starttime: {
-                type: Date,
+                type: String,
                 // required: true
             },
             endtime: {
-                type: Date,
+                type: String,
                 // required: true
             },
             description: {
