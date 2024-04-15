@@ -62,10 +62,14 @@ const TaskSchema = new mongoose.Schema({
             otherTechnicianName:{
                 type: String,
             },
-            serviceName: {
+            serviceName: [{
                 type: String,
                 // required: true
-            },
+            }],
+            serviceImage: [{
+                type: String,
+                // required: true
+            }],
             companyName: {
                 type: String,
                 // required: true

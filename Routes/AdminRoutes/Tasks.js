@@ -292,7 +292,7 @@ router.post("/updateTaskStatus", async (req, res) => {
 
 router.post("/updateCompletedStatus", async (req, res) => {
     try {
-        const { taskItemId, taskId, status, completedDetails,email } = req.body;
+        const { taskItemId, taskId, status, completedDetails, email } = req.body;
         const taskToUpdate = await Task.findOne({
             _id: taskId,
             "technicians.tasks._id": taskItemId,
@@ -360,8 +360,6 @@ router.post("/updateCompletedStatus", async (req, res) => {
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .completedDetails.customerSign;
 
-        // console.log("Techsign", Techsign);
-
         const TechnicianfirstName =
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .technicianDetails.firstName;
@@ -377,7 +375,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
                 .otherTechnicianName;
 
         taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status;
-        // Update completedDetails
+
         taskToUpdate.technicians[technicianIndex].tasks[
             taskIndex
         ].completedDetails = {
@@ -435,7 +433,6 @@ router.post("/updateCompletedStatus", async (req, res) => {
             if (err) {
                 return console.error("error");
             }
-
             console.log("success!");
         });
         //res.setHeader("Content-Type", "application/pdf");
@@ -444,7 +441,6 @@ router.post("/updateCompletedStatus", async (req, res) => {
             fullFileName: `http://localhost:4000/${full_fileName}`,
             fileName: fileName,
         });
-
 
         const transporter = nodemailer.createTransport({
             service: "Gmail",
@@ -481,23 +477,19 @@ router.post("/updateCompletedStatus", async (req, res) => {
             <p>The Pest Patrol Team</p>
 
             `,
-            attachments:[
+            attachments: [
                 {
-                    filename:fileName,
-                    content:pdfBuffer
+                    filename: fileName,
+                    content: pdfBuffer
                 }
             ]
-
         }
-
         await transporter.sendMail(mailOptions)
         console.log("Pest Patrol Service Reportemail sent successfully.")
 
         res.status(200).json({
             message: "Pest Patrol Service Reportemail sent successfully."
         })
- 
-
     } catch (error) {
         console.error("Error updating task status:", error);
         res.status(500).json({ error: "Server error" });
