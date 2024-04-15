@@ -167,7 +167,7 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    let result = await Auth.findOne({ email: email });
+    let result = await Auth.findOne({ email: email,deleted:false });
     if (!result) {
       return res.status(400).json({ message: "Technician not found." });
     }
