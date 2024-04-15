@@ -85,8 +85,8 @@ const TaskSchema = new mongoose.Schema({
             },
             startDate: {
                 type: String,
-                // required: true 
-            },
+                // required: true
+           },
             starttime: {
                 type: String,
                 // required: true
@@ -96,6 +96,10 @@ const TaskSchema = new mongoose.Schema({
                 // required: true
             },
             description: {
+                type: String,
+                // required: true
+            },
+            pdf: {
                 type: String,
                 // required: true
             },

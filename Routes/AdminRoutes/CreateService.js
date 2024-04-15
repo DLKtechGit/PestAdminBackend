@@ -107,4 +107,22 @@ router.post("/deleteservices/:id", async (req, res) => {
   }
 });
 
+router.post("/getservice/byname", async (req, res) => {
+  let { serviceName } = req.body; // Use req.body to access serviceNames as an array
+  try {
+    const services = await createServices.find({ serviceName: { $in: serviceName } }); 
+    if (services.length > 0) {
+      res.statusMessage = "Services fetched successfully";
+      res.status(200).json({
+        Results: services 
+      });
+    } else {
+      res.status(400).json({
+        message: "Services not found" 
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: "Server error" });
+  }
+});
 module.exports = router;
