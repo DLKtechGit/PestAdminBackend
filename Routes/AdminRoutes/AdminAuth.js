@@ -42,7 +42,7 @@ router.post('/registeradmin', async (req, res) => {
         }
 
         // Create a new admin
-        const admin = new Admin({ email, password, role: 'admin' });
+        const admin = new Admin({ email, password, role: 'childadmin' });
         let result = await admin.save();
 
         res.status(200).json({ message: 'Admin registered successfully', data: result });

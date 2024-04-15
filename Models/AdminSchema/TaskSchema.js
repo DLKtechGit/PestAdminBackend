@@ -90,11 +90,7 @@ const TaskSchema = new mongoose.Schema({
             starttime: {
                 type: String,
                 // required: true
-            },
-            endtime: {
-                type: String,
-                // required: true
-            },
+            },           
             description: {
                 type: String,
                 // required: true
