@@ -5,6 +5,11 @@ const qrCodeSchema = new mongoose.Schema({
         type: String,
         // required: true
     },
+    qrScanned: {
+        type: String,
+        Boolean:false
+        // required: true
+    },
     titles: [{
         title: { type: String },
         // Other properties if needed

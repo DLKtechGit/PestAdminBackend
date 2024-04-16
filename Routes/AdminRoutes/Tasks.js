@@ -131,11 +131,9 @@ router.get("/getTasks", async (req, res) => {
 
 router.get("/getTasksbystart", async (req, res) => {
     try {
-        // Define the query to find tasks with status "start"
         const startTasks = await Task.find({
             "technicians.tasks.status": "start"
         });
-
         res.status(200).json({
             Length: startTasks.length,
             Results: startTasks
@@ -212,9 +210,6 @@ router.get("/getcompletedTasks/:_id/:taskItemId", async (req, res) => {
         console.error("Error fetching completed task:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-
-    // Extract the specific completed task from the result
-
 });
 
 router.post("/updateTaskOtherTechnicianName", async (req, res) => {
@@ -263,7 +258,6 @@ router.post("/updateTaskStatus", async (req, res) => {
             technicianStartDate,
             technicianStartTime,
             pauseReason,
-            completedDetails,
         } = req.body;
         const taskToUpdate = await Task.findOne({
             _id: taskId,
@@ -308,6 +302,59 @@ router.post("/updateTaskStatus", async (req, res) => {
         });
     } catch (error) {
         console.error("Error updating task status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.post("/updateQrscannedStatus", async (req, res) => {
+    try {
+        const { taskItemId, taskId, qrScanned, qrId } = req.body;
+
+        const taskToUpdate = await Task.findOne({
+            _id: taskId,
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.titles.title": qrId, // Changed to match title instead of qrId
+        });
+
+        if (!taskToUpdate) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Technician not found" });
+        }
+
+        const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const titleIndex = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].titles.findIndex(
+            (title) => title.title === qrId // Changed to match title
+        );
+
+        if (titleIndex === -1) {
+            return res.status(404).json({ error: "QR code not found" });
+        }
+
+        // Update the qrScanned property of the specific title (QR code)
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].titles[titleIndex].qrScanned = qrScanned;
+
+        await taskToUpdate.save();
+
+        res.status(200).json({
+            message: "QR code status updated successfully",
+            updatedTask: taskToUpdate,
+        });
+    } catch (error) {
+        console.error("Error updating QR code status:", error);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -403,7 +450,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
             techSign: techSignBase64,
             customerAvailble: completedDetails.customerAvailble,
             customerSign: customerSignBase64,
-            endTime:completedDetails.endTime
+            endTime: completedDetails.endTime
         };
 
 
