@@ -121,8 +121,8 @@ router.post('/admindelete/:id', async (req, res) => {
 
 router.get('/admin/count', async(req,res)=>{
     try {
-        const adminCount = await Admin.countDocuments()
-        console.log('admin============>',adminCount);
+        const adminCount = await Admin.countDocuments({role:"childadmin"})
+        // console.log('admin============>',adminCount);
         res.status(200).json({
             Admins:adminCount
         })
@@ -131,6 +131,6 @@ router.get('/admin/count', async(req,res)=>{
         res.status(500).json({ error: 'Server error' });
     }
 })
-
+ 
 
 module.exports = router;

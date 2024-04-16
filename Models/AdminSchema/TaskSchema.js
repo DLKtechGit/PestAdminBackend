@@ -44,7 +44,7 @@ const TaskSchema = new mongoose.Schema({
             ref: 'Technician',
             // required: true
         },
-       
+
         tasks: [{
             technicianDetails: {
                 firstName: {
@@ -55,11 +55,11 @@ const TaskSchema = new mongoose.Schema({
                     type: String,
                     // required: true
                 },
-                email:{
+                email: {
                     type: String,
-                }               
+                }
             },
-            otherTechnicianName:{
+            otherTechnicianName: {
                 type: String,
             },
             serviceName: [{
@@ -74,23 +74,23 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 // required: true
             },
-            technicianStartDate:{
+            technicianStartDate: {
                 type: String,
             },
-            technicianStartTime:{
+            technicianStartTime: {
                 type: String,
             },
-            pauseReason:{
+            pauseReason: {
                 type: String,
             },
             startDate: {
                 type: String,
                 // required: true
-           },
+            },  
             starttime: {
                 type: String,
                 // required: true
-            },           
+            },
             description: {
                 type: String,
                 // required: true
@@ -99,17 +99,29 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 // required: true
             },
-            status: {
+            status: { 
                 type: String,
                 default: 'Yet to Start'
             },
+            qrTitle: {
+                type: String,
+            },
+            titles: [{
+                title: { type: String },
+                qrScanned: { type: Boolean, default: false } 
+            }],
             numQRCodes: {
                 type: Number,
-            }, 
+            },
             available: {
                 type: String,
-                default: 'NO' 
+                default: 'NO'
             },
+            // qrScanned: {
+            //     type: String,
+            //     default:"false",
+            //     Boolean:false
+            // },
             completedDetails: {
                 chemicalsName: [{
                     type: String,
@@ -117,31 +129,31 @@ const TaskSchema = new mongoose.Schema({
                 }],
                 recommendation: {
                     type: String,
-                },              
+                },
                 firstName: {
                     type: String,
                 },
                 lastName: {
                     type: String,
                 },
-                techSign:{
+                techSign: {
                     type: String,
                     // default:"Not Signed"
                 },
-                name:{
+                name: {
                     type: String,
                 },
-                customerAvailble:{
+                customerAvailble: {
                     type: String,
-                    default:"false"
+                    default: "false"
                 },
-                customerSign:{
+                customerSign: {
                     type: String,
                     // default:"Not Signed"
-                },   
-                endTime:{
+                },
+                endTime: {
                     type: String,
-                },        
+                },
             },
         }]
     }]
