@@ -350,7 +350,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
         const Address =
             taskToUpdate.customerDetails.address +
             ", " +
-            taskToUpdate.customerDetails.city +
+            taskToUpdate.customerDetails.city +  
             ", " +
             taskToUpdate.customerDetails.country +
             ", " +
@@ -407,8 +407,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
         };
 
 
-        const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">${StartDate}</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
-        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>11.00 pm</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${customerSignBase64}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>  ${OtherTechnicianName}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
+        const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">16-APR-2024</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
+        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${customerSignBase64}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>  ${OtherTechnicianName}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
         const footer =
             '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
         const html = header + body + footer;
@@ -511,10 +511,12 @@ router.post("/updateCompletedStatus", async (req, res) => {
             
             <p>Wishing you a pest-free environment! </p>
 
-            <img src="https://t4.ftcdn.net/jpg/04/84/47/27/240_F_484472702_acpl3SZTBwb2Al4ZiW8VusICp7Utl8ed.jpg" alt="Pest Patrol Logo" />
+           
 
             <p>Warm regards,</p>
             <p>The Pest Patrol Team</p>
+
+            <img style={{width:"100px"}} src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOgdUrVi6mkgpOJF_V1YeH0STWdZoZw07F4Lew2_2erg&s" alt="Pest Patrol Logo" />
 
             `,
             attachments: [
@@ -533,6 +535,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
         });
 
 
+
+        
 
     } catch (error) {
         console.error("Error updating task status:", error);
