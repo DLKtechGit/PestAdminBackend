@@ -124,7 +124,7 @@ router.get("/getTasks", async (req, res) => {
     // console.log("result====>", result);
     res.statusMessage = "Technician Data fetched successfully...";
     res.status(200).json({
-        Length: result.length,
+        Length: result.length, 
         Results: result,
     });
 });
@@ -306,6 +306,45 @@ router.post("/updateTaskStatus", async (req, res) => {
     }
 });
 
+router.get("/getTaskStatus/:taskItemId", async (req, res) => {
+    try {
+        const { taskId, taskItemId } = req.params;
+
+        const task = await Task.findOne({
+            //_id: taskId,
+            "technicians.tasks._id": taskItemId,
+        });
+ 
+        if (!task) { 
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = task.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const taskIndex = task.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const selectedTask = task.technicians[technicianIndex].tasks[taskIndex];
+
+        res.status(200).json({ selectedTask });
+    } catch (error) {
+        console.error("Error fetching task:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
 router.post("/updateQrscannedStatus", async (req, res) => {
     try {
         const { taskItemId, taskId, qrScanned, qrId } = req.body;
@@ -313,12 +352,14 @@ router.post("/updateQrscannedStatus", async (req, res) => {
         const taskToUpdate = await Task.findOne({
             _id: taskId,
             "technicians.tasks._id": taskItemId,
-            "technicians.tasks.titles.title": qrId, // Changed to match title instead of qrId
+            "technicians.tasks.titles.title": qrId, 
         });
+        console.log("taskToUpdate",taskToUpdate,"title",qrScanned);
 
         if (!taskToUpdate) {
             return res.status(404).json({ error: "Task not found" });
         }
+  
 
         const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
             tech.tasks.some((task) => task._id.equals(taskItemId))
