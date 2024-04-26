@@ -15,6 +15,7 @@ const OtherAuth = require("./Routes/AdminRoutes/OtherAuth")
 const Qrcode = require("./Routes/AdminRoutes/Qrcode")
 const Chemicals = require("./Routes/AdminRoutes/CreateChemicals")
 const Pdf = require ("./Routes/AdminRoutes/Pdf")
+const serviceCategory = require ("./Routes/AdminRoutes/ServiceCategory")
 
 app.get("/", (req, res) => {
     res.send("from get route")
@@ -31,6 +32,8 @@ app.use('/task', Tasks);
 app.use('/adminauth', Admin);
 app.use('/otherauth', OtherAuth);
 app.use('/qrcode',Qrcode)
+app.use('/category',serviceCategory)
+
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 app.use('/images', express.static(path.join(__dirname, '/pdf_images')));
 app.use('/reports', express.static(path.join(__dirname, '/reports')));
