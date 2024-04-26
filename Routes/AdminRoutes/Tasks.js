@@ -8,69 +8,6 @@ const { writeFile } = require("fs");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
-// const transporter = nodemailer.createTransport({
-//     service: "Gmail",
-//     auth: {
-//         user: "pestcontrol633@gmail.com",
-//         pass: "acof axql bhdv yats",
-//     },
-// });
-
-// router.post("/subtionmail", async (req, res) => {
-//     const { email } = req.body
-
-//     try {
-//         const customer = await Customer.findOne({ email })
-//         if (!customer) {
-//             return res.status(404).json({ error: "Customr not found " })
-//         }
-
-
-//         const mailOptions = {
-//             from: "dlktechnologiesreact@gmail.com",
-//             to: email,
-//             subject: "Pest Patrol Service Report",
-//             html: `
-//             <p>Hi ${customer.name}, </p>
-
-//             <p> We're delighted to provide you with a summary of your recent service from Pest Patrol. The service report attached with this mail for your reference. </p>
-
-//             <p> If you have any questions or need further assistance, feel free to reply to this email. We're here to help! </p>
-
-//             <p>Wishing you a pest-free environment! </p>
-
-//             <img src="https://t4.ftcdn.net/jpg/04/84/47/27/240_F_484472702_acpl3SZTBwb2Al4ZiW8VusICp7Utl8ed.jpg" alt="Pest Patrol Logo" />
-
-//             <p>Warm regards,</p>
-//             <p>The Pest Patrol Team</p>
-//             `,
-//     };
-
-//             `
-//         }
-
-//         await transporter.sendMail(mailOptions)
-//         console.log("Pest Patrol Service Reportemail sent successfully.")
-
-//         res.status(200).json({
-//             message: "Pest Patrol Service Reportemail sent successfully."
-//         })
-//     } catch (error) {
-//         console.error("Error sending email:", error);
-//         res.status(500).json({ error: "Internal server error" });
-//     }
-// })
-
-
-
-//     res.status(200).json({
-//       message: "Pest Patrol Service Reportemail sent successfully.", 
-//     });
-//   } catch (error) {
-//     console.error("Error sending email:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.post("/createTask", async (req, res) => {
     try {
@@ -148,7 +85,7 @@ router.get("/getTasksbystart", async (req, res) => {
 
 
 router.get("/getTask/:taskId", async (req, res) => {
-    const taskId = req.params.taskId; 
+    const taskId = req.params.taskId;
 
     try {
         const task = await Task.findOne({ "technicians.tasks._id": taskId });
@@ -486,13 +423,86 @@ router.post("/updateSubCategoryStatus", async (req, res) => {
     }
 });
 
+router.post("/updateNoQRSubCategoryStatus", async (req, res) => {
+    try {
+        const { taskId, taskItemId, nosubcatId, status } = req.body;
+
+        const taskToUpdate = await Task.findOneAndUpdate(
+            {
+                _id: taskId,
+                "technicians.tasks._id": taskItemId,
+                "technicians.tasks.noqrcodeService._id": nosubcatId
+            },
+            {
+                $set: {
+                    "technicians.$[tech].tasks.$[task].noqrcodeService.$[qr].status": status
+                }
+            },
+            {
+                arrayFilters: [
+                    { "tech.tasks._id": taskItemId },
+                    { "task._id": taskItemId },
+                    { "qr._id": nosubcatId }
+                ],
+                new: true
+            }
+        );
+
+        if (!taskToUpdate) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        res.status(200).json({
+            message: "QR code status updated successfully",
+            updatedTask: taskToUpdate,
+        });
+    } catch (error) {
+        console.error("Error updating QR code status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.get("/getNoSubCategoryFalseStatus", async (req, res) => {
+    try {
+        const tasksWithFalseStatus = await Task.find({
+            "technicians.tasks.noqrcodeService.status": false
+        });
+
+        if (!tasksWithFalseStatus || tasksWithFalseStatus.length === 0) {
+            return res.status(404).json({ error: "No tasks found with noqrcodeService status 'false'" });
+        }
+
+        const NosubCategoryStatusWithFalseStatus = tasksWithFalseStatus.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.flatMap(task =>
+                    task.noqrcodeService.filter(noqrcode =>
+                        noqrcode.status === false
+                    )
+                )
+            )
+        );
+
+        if (NosubCategoryStatusWithFalseStatus.length === 0) {
+            return res.status(404).json({ error: "No subCategoryStatus found with status 'false'" });
+        }
+
+        res.status(200).json({
+            NosubCategoryStatusWithFalseStatus
+        });
+    } catch (error) {
+        console.error("Error retrieving subCategoryStatus with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
 router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
     try {
         const tasksWithFalseStatus = await Task.find({
             "technicians.tasks.QrCodeCategory.subCategoryStatus.status": false
         });
 
-        if (!tasksWithFalseStatus || tasksWithFalseStatus.length === 0) { 
+        if (!tasksWithFalseStatus || tasksWithFalseStatus.length === 0) {
             return res.status(404).json({ tasksWithFalseStatus });
         }
 
@@ -502,7 +512,7 @@ router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
                     task.QrCodeCategory.flatMap(qrCodeCategory =>
                         qrCodeCategory.subCategoryStatus.filter(status => status.status === false)
                     )
-                ) 
+                )
             )
         );
 
@@ -607,7 +617,11 @@ router.post("/updateCompletedStatus", async (req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
         const techSignBase64 = completedDetails.techSign.split(",")[1];
-        const customerSignBase64 = completedDetails.customerSign.split(",")[1];
+        let customerSignBase64 = "N/A";
+
+        if (completedDetails.customerSign) {
+            customerSignBase64 = completedDetails.customerSign.split(",")[1];
+        }
 
         const CustomerName = taskToUpdate.customerDetails.name;
 
@@ -645,9 +659,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .completedDetails.techSign;
 
-        const CustomerSign =
-            taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
-                .completedDetails.customerSign;
+        const QrCodeCategory = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].QrCodeCategory.map(item => item.subCategory);
+
 
         const TechnicianfirstName =
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
@@ -679,7 +692,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
 
 
         const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">${currentDate}</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
-        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${customerSignBase64}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>   ${OtherTechnicianName ? OtherTechnicianName : "-"}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
+        
+        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${QrCodeCategory}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div>${customerSignBase64 === "N/A" ? "N/A" : `<img src="data:image/png;base64,${customerSignBase64}" width="150px" />`}</div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>   ${OtherTechnicianName ? OtherTechnicianName : "-"}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
         const footer =
             '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
         const html = header + body + footer;
@@ -797,6 +811,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
 
 
 
+
 router.get("/completedTaskDetails/:taskId/:taskItemId", async (req, res) => {
     try {
         const { taskId, taskItemId } = req.params;
@@ -875,8 +890,14 @@ router.get("/ongoing/taskcount", async (req, res) => {
 
 router.get("/completed/taskcount", async (req, res) => {
     try {
+        const taskItemId = req.query.taskItemId;
         const CompletedTask = await Task.countDocuments({
-            "technicians.tasks.status": "completed",
+            "technicians.tasks": {
+                $elemMatch: {
+                    taskItemId: taskItemId,
+                    status: "completed"
+                }
+            }
         });
 
         res.status(200).json({
@@ -887,4 +908,8 @@ router.get("/completed/taskcount", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
+
+
+
 module.exports = router; 
