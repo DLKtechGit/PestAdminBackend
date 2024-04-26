@@ -66,10 +66,26 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 // required: true
             }],
-            serviceImage: [{
-                type: String,
-                // required: true
+            QrCodeCategory: [{
+                category: {
+                    type: String
+                },
+                subCategory: [{
+                    type: String
+                }],
+                subCategoryStatus: [{
+                    subCategory: String,
+                    status: Boolean
+                }] 
             }],
+            mainCategory: [{
+                type: String,
+                // required: true 
+            }],
+            // serviceImage: [{
+            //     type: String, 
+            //     // required: true
+            // }],
             companyName: {
                 type: String,
                 // required: true
@@ -86,7 +102,7 @@ const TaskSchema = new mongoose.Schema({
             startDate: {
                 type: String,
                 // required: true
-            },  
+            },
             starttime: {
                 type: String,
                 // required: true
@@ -97,18 +113,39 @@ const TaskSchema = new mongoose.Schema({
             },
             pdf: {
                 type: String,
-                // required: true 
-            }, 
-            status: {  
+                // required: true
+            },
+            status: {
                 type: String,
                 default: 'Yet to Start'
             },
+            qrDetails: [{
+                serviceName: {
+                    type: String
+                },
+                qrTitle: {
+                    type: String
+                },
+                titles: [{
+                    title: {
+                        type: String
+                    },
+                    qrScanned: {
+                        type: Boolean,
+                        default: false
+                    },
+                    taskItemStatus: {
+                        type: String,
+                        default: "Start"
+                    }
+                }],
+            }],
             qrTitle: {
                 type: String,
             },
             titles: [{
                 title: { type: String },
-                qrScanned: { type: Boolean, default: false } 
+                qrScanned: { type: Boolean, default: false }
             }],
             numQRCodes: {
                 type: Number,

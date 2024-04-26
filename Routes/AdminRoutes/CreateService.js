@@ -32,47 +32,56 @@ const upload = multer({
   },
 });
 
-router.post("/createService",upload.single("serviceImage"),
-  async (req, res) => {
-    const { serviceName } = req.body;
-    const serviceImage = req.file;
-    // console.log("serviceImage", req.file);
+router.post("/createService", upload.single("serviceImage"), async (req, res) => {
+  const { serviceName, mainCategory, subCategory } = req.body;
+  // const serviceImage = req.file;
 
-    try {
-      if (!serviceName || !serviceImage) {
-        return res.status(400).json({ error: "Missing required data" });
-      }
-
-      const checkServiceName = await createServices.findOne({
-        serviceName: serviceName,
-      });
-      if (checkServiceName) {
-        return res
-          .status(403)
-          .json({
-            message: "Service already exists. Please choose another name.",
-          });
-      }
-
-      const newService = new createServices({
-        serviceName: serviceName,
-        serviceImage: serviceImage.filename,
-        created_date: new Date(),
-      });
-    //   console.log("new->", newService);
-      const result = await newService.save();
-
-      if (result) {
-        return res
-          .status(200)
-          .json({ message: "New service created successfully", data: result });
-      }
-    } catch (error) {
-      console.error("Service creation failed:", error);
-      return res.status(500).json({ error: "Server error" });
+  try {
+    if (!serviceName || !mainCategory) {
+      return res.status(400).json({ error: "Missing required data" });
     }
+
+    let existingService = await createServices.findOne({ mainCategory });
+
+    if (!existingService) {
+      const newServiceData = {
+        serviceName: serviceName.split(','),
+        mainCategory: mainCategory,
+        // serviceImage: serviceImage.filename,
+        created_date: new Date(),
+      };
+
+      if (subCategory) {
+        newServiceData.subCategories = [subCategory];
+      }
+
+      const newService = new createServices(newServiceData);
+      const result = await newService.save();
+      return res.status(200).json({ message: "New service created successfully", data: result });
+    }
+
+    if (subCategory) {
+      if (!existingService.subCategories.includes(subCategory)) {
+        existingService.subCategories.push(subCategory);
+      } else {
+        return res.status(400).json({ error: "Subcategory already exists" });
+      }
+    }
+    existingService.serviceName = existingService.serviceName.concat(serviceName.split(','));
+    // existingService.serviceImage = serviceImage.filename;
+    existingService.created_date = new Date();
+
+    // Save the updated service
+    const updatedService = await existingService.save();
+    return res.status(200).json({ message: "Service updated successfully", data: updatedService });
+  } catch (error) {
+    console.error("Service creation/update failed:", error);
+    return res.status(500).json({ error: "Server error" });
   }
-);
+});
+
+
+
 
 router.get("/getServices", async (req, res) => {
   var result = await createServices.find();

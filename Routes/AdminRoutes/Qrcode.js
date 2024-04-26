@@ -61,8 +61,8 @@ res.status(201).json({
         res.status(500).json({
             message: 'Internal server error.'
         });
-    }
-});
+    }   
+});  
 
 router.get("/getQrcode", async (req, res) => {
     try {

@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const Customer = new mongoose.Schema({
-    firstName: {
-        type: String,
+    firstName: { 
+        type: String, 
         // required: true
     },
     lastName: {
@@ -10,7 +10,7 @@ const Customer = new mongoose.Schema({
         // required: true
     },
     name: {
-        type: String,
+        type: String, 
         // required: true
     },
     email: {

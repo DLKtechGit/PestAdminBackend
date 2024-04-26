@@ -64,7 +64,7 @@ const nodemailer = require("nodemailer");
 
 
 //     res.status(200).json({
-//       message: "Pest Patrol Service Reportemail sent successfully.",
+//       message: "Pest Patrol Service Reportemail sent successfully.", 
 //     });
 //   } catch (error) {
 //     console.error("Error sending email:", error);
@@ -79,6 +79,8 @@ router.post("/createTask", async (req, res) => {
             customerId: customerId,
             "technicians.technicianId": technicianId,
         });
+
+        // console.log("v----------------->",taskDetails);
 
         if (existingTask) {
             const technicianIndex = existingTask.technicians.findIndex(
@@ -132,7 +134,7 @@ router.get("/getTasks", async (req, res) => {
 router.get("/getTasksbystart", async (req, res) => {
     try {
         const startTasks = await Task.find({
-            "technicians.tasks.status": "start"
+            "technicians.tasks.status": { $in: ["start", "ongoing"] }
         });
         res.status(200).json({
             Length: startTasks.length,
@@ -144,8 +146,9 @@ router.get("/getTasksbystart", async (req, res) => {
     }
 });
 
+
 router.get("/getTask/:taskId", async (req, res) => {
-    const taskId = req.params.taskId;
+    const taskId = req.params.taskId; 
 
     try {
         const task = await Task.findOne({ "technicians.tasks._id": taskId });
@@ -258,7 +261,10 @@ router.post("/updateTaskStatus", async (req, res) => {
             technicianStartDate,
             technicianStartTime,
             pauseReason,
+            titleId,
+            taskItemStatus,
         } = req.body;
+
         const taskToUpdate = await Task.findOne({
             _id: taskId,
             "technicians.tasks._id": taskItemId,
@@ -284,15 +290,31 @@ router.post("/updateTaskStatus", async (req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
 
+        // Find the QR detail containing the specified titleId
+        const qrDetailContainingTitle = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].qrDetails.find(
+            (qrDetail) => qrDetail.titles.some((title) => title._id.equals(titleId))
+        );
+
+        if (!qrDetailContainingTitle) {
+            return res.status(404).json({ error: "QR detail not found" });
+        }
+
+        const titleIndex = qrDetailContainingTitle.titles.findIndex(
+            (title) => title._id.equals(titleId)
+        );
+
+        if (titleIndex === -1) {
+            return res.status(404).json({ error: "Title not found" });
+        }
+
+        // Update the taskItemStatus of the specific title
+        qrDetailContainingTitle.titles[titleIndex].taskItemStatus = taskItemStatus;
+
+        // Optionally, update other fields such as status, startDate, etc.
         taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status;
-        taskToUpdate.technicians[technicianIndex].tasks[
-            taskIndex
-        ].technicianStartDate = technicianStartDate;
-        taskToUpdate.technicians[technicianIndex].tasks[
-            taskIndex
-        ].technicianStartTime = technicianStartTime;
-        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].pauseReason =
-            pauseReason;
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartDate = technicianStartDate;
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartTime = technicianStartTime;
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].pauseReason = pauseReason;
 
         await taskToUpdate.save();
 
@@ -306,6 +328,44 @@ router.post("/updateTaskStatus", async (req, res) => {
     }
 });
 
+router.get("/getTaskStatus/:taskItemId", async (req, res) => {
+    try {
+        const { taskId, taskItemId } = req.params;
+
+        const task = await Task.findOne({
+            //_id: taskId,
+            "technicians.tasks._id": taskItemId,
+        });
+
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = task.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const taskIndex = task.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const selectedTask = task.technicians[technicianIndex].tasks[taskIndex];
+
+        res.status(200).json({ selectedTask });
+    } catch (error) {
+        console.error("Error fetching task:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 router.post("/updateQrscannedStatus", async (req, res) => {
     try {
         const { taskItemId, taskId, qrScanned, qrId } = req.body;
@@ -313,7 +373,7 @@ router.post("/updateQrscannedStatus", async (req, res) => {
         const taskToUpdate = await Task.findOne({
             _id: taskId,
             "technicians.tasks._id": taskItemId,
-            "technicians.tasks.titles.title": qrId, // Changed to match title instead of qrId
+            "technicians.tasks.qrDetails.titles.title": qrId
         });
 
         if (!taskToUpdate) {
@@ -336,8 +396,16 @@ router.post("/updateQrscannedStatus", async (req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
 
-        const titleIndex = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].titles.findIndex(
-            (title) => title.title === qrId // Changed to match title
+        const qrDetailsIndex = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].qrDetails.findIndex(
+            (qrDetail) => qrDetail.titles.some((title) => title.title === qrId)
+        );
+
+        if (qrDetailsIndex === -1) {
+            return res.status(404).json({ error: "QR code details not found" });
+        }
+
+        const titleIndex = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].qrDetails[qrDetailsIndex].titles.findIndex(
+            (title) => title.title === qrId
         );
 
         if (titleIndex === -1) {
@@ -345,7 +413,7 @@ router.post("/updateQrscannedStatus", async (req, res) => {
         }
 
         // Update the qrScanned property of the specific title (QR code)
-        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].titles[titleIndex].qrScanned = qrScanned;
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].qrDetails[qrDetailsIndex].titles[titleIndex].qrScanned = qrScanned;
 
         await taskToUpdate.save();
 
@@ -359,6 +427,157 @@ router.post("/updateQrscannedStatus", async (req, res) => {
     }
 });
 
+
+router.post("/updateSubCategoryStatus", async (req, res) => {
+    try {
+        const { taskItemId, taskId, status, subcatId } = req.body;
+        // console.log("req.body", req.body);
+        const taskToUpdate = await Task.findOne({
+            _id: taskId,
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.QrCodeCategory.subCategoryStatus._id": subcatId
+        });
+
+        if (!taskToUpdate) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Technician not found" });
+        }
+
+        const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const qrDetail = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].QrCodeCategory.find(
+            (QrCodeCategory) => QrCodeCategory.subCategoryStatus.some((title) => String(title._id) === String(subcatId))
+        );
+        // console.log("qrDetail", qrDetail);
+        if (!qrDetail) {
+            return res.status(404).json({ error: "QR code details not found" });
+        }
+
+        const titleIndex = qrDetail.subCategoryStatus.findIndex((title) => String(title._id) === String(subcatId));
+
+        if (titleIndex === -1) {
+            return res.status(404).json({ error: "QR code not found" });
+        }
+
+        qrDetail.subCategoryStatus[titleIndex].status = status;
+
+        await taskToUpdate.save();
+
+        res.status(200).json({
+            message: "QR code status updated successfully",
+            updatedTask: taskToUpdate,
+        });
+    } catch (error) {
+        console.error("Error updating QR code status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
+    try {
+        const tasksWithFalseStatus = await Task.find({
+            "technicians.tasks.QrCodeCategory.subCategoryStatus.status": false
+        });
+
+        if (!tasksWithFalseStatus || tasksWithFalseStatus.length === 0) { 
+            return res.status(404).json({ tasksWithFalseStatus });
+        }
+
+        const subCategoryStatusWithFalseStatus = tasksWithFalseStatus.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.flatMap(task =>
+                    task.QrCodeCategory.flatMap(qrCodeCategory =>
+                        qrCodeCategory.subCategoryStatus.filter(status => status.status === false)
+                    )
+                ) 
+            )
+        );
+
+        if (subCategoryStatusWithFalseStatus.length === 0) {
+            return res.status(404).json({ error: "No subCategoryStatus found with status 'false'" });
+        }
+
+        res.status(200).json({
+            subCategoryStatusWithFalseStatus
+        });
+    } catch (error) {
+        console.error("Error retrieving subCategoryStatus with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
+
+router.post("/updateQrCodeCompletedStatus", async (req, res) => {
+    try {
+        const { taskItemId, taskId, taskItemStatus, qrId } = req.body;
+        // console.log("req.body", req.body);
+        const taskToUpdate = await Task.findOne({
+            _id: taskId,
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.qrDetails.titles._id": qrId
+        });
+
+        if (!taskToUpdate) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Technician not found" });
+        }
+
+        const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const qrDetail = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].qrDetails.find(
+            (qrDetail) => qrDetail.titles.some((title) => String(title._id) === String(qrId))
+        );
+
+        if (!qrDetail) {
+            return res.status(404).json({ error: "QR code details not found" });
+        }
+
+        const titleIndex = qrDetail.titles.findIndex((title) => String(title._id) === String(qrId));
+
+        if (titleIndex === -1) {
+            return res.status(404).json({ error: "QR code not found" });
+        }
+
+        qrDetail.titles[titleIndex].taskItemStatus = taskItemStatus;
+
+        await taskToUpdate.save();
+
+        res.status(200).json({
+            message: "QR code status updated successfully",
+            updatedTask: taskToUpdate,
+        });
+    } catch (error) {
+        console.error("Error updating QR code status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 router.post("/updateCompletedStatus", async (req, res) => {
     try {
@@ -406,6 +625,9 @@ router.post("/updateCompletedStatus", async (req, res) => {
         const serviceName =
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex].serviceName;
 
+        const date = Date.now()
+        const currentDate = moment(date).format("DD-MMM-YYYY");
+
         const StartDate = moment(
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartDate,
             "YYYY-MM-DD"
@@ -441,6 +663,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .otherTechnicianName;
 
+
         taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status
         // Update completedDetails
         taskToUpdate.technicians[technicianIndex].tasks[
@@ -455,8 +678,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
         };
 
 
-        const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">16-APR-2024</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
-        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${customerSignBase64}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>  ${OtherTechnicianName}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
+        const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";border:1px solid #3A3A3A;}.heading {background-color:#3A3A3A;color:white;font-weight:bold;width:345px;}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">${currentDate}</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png" /></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
+        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td>${serviceName}</td></tr><tr><td><b>Chemical Used</b></td><td>${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div><img src="data:image/png;base64,${customerSignBase64}" width="150px" /></div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>   ${OtherTechnicianName ? OtherTechnicianName : "-"}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td>${completedDetails.recommendation}</td></tr></table></center>`;
         const footer =
             '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
         const html = header + body + footer;
@@ -505,32 +728,11 @@ router.post("/updateCompletedStatus", async (req, res) => {
             console.log("success!");
         });
 
-
-        //res.setHeader("Content-Type", "application/pdf");
-        //res.setHeader('Content-Disposition', 'attachment; filename="output.pdf"');
-        //   res.status(200).json({
-        //     fullFileName: `http://localhost:4000/${full_fileName}`,
-        //     fileName: fileName,
-        //   });
-        // } catch (error) {
-        //   console.error("Error updating task status:", error);
-        //   res.status(500).json({ error: "Server error" });
-        // }
-
-
-        //     console.log("success!");
-        // });
-
         const pdfBase64 = pdfBuffer.toString("base64");
 
         taskToUpdate.technicians[technicianIndex].tasks[taskIndex].pdf = pdfBase64;
 
         await taskToUpdate.save();
-
-        //res.setHeader("Content-Type", "application/pdf");
-        //res.setHeader('Content-Disposition', 'attachment; filename="output.pdf"');
-
-
         const transporter = nodemailer.createTransport({
             service: "Gmail",
             auth: {
@@ -593,6 +795,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
     }
 });
 
+
+
 router.get("/completedTaskDetails/:taskId/:taskItemId", async (req, res) => {
     try {
         const { taskId, taskItemId } = req.params;
@@ -638,47 +842,6 @@ router.get("/completedTaskDetails/:taskId/:taskItemId", async (req, res) => {
 
 module.exports = router;
 
-// router.post("/updateTaskStatus", async (req, res) => {
-//     try {
-//       const { taskItemId, taskId, status, technicianStartDate, technicianStartTime,pauseReason } = req.body;
-//       const taskToUpdate = await Task.findOne({
-//         _id: taskId,
-//         "technicians.tasks._id": taskItemId,
-//       });
-
-//       if (!taskToUpdate) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
-//         tech.tasks.some((task) => task._id.equals(taskItemId))
-//       );
-
-//       if (technicianIndex === -1) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
-//         (task) => task._id.equals(taskItemId)
-//       );
-
-//       if (taskIndex === -1) {
-//         return res.status(404).json({ error: "Task not found" });
-//       }
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].status = status;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartDate = technicianStartDate;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].technicianStartTime = technicianStartTime;
-//       taskToUpdate.technicians[technicianIndex].tasks[taskIndex].pauseReason = pauseReason;
-
-//       await taskToUpdate.save();
-
-//       res.status(200).json({
-//         message: "Task status updated successfully",
-//         updatedTask: taskToUpdate,
-//       });
-//     } catch (error) {
-//       console.error("Error updating task status:", error);
-//       res.status(500).json({ error: "Server error" });
-//     }
-//   });
 
 router.get("/start/taskcount", async (req, res) => {
     try {
