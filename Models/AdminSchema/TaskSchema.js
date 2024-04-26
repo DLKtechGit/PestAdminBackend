@@ -18,7 +18,7 @@ const TaskSchema = new mongoose.Schema({
         },
         phoneNumber: {
             type: String,
-            unique: true,
+            // unique: true,
             // required: true,
         },
         address: {
@@ -97,9 +97,9 @@ const TaskSchema = new mongoose.Schema({
             },
             pdf: {
                 type: String,
-                // required: true
-            },
-            status: { 
+                // required: true 
+            }, 
+            status: {  
                 type: String,
                 default: 'Yet to Start'
             },

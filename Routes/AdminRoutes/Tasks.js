@@ -416,7 +416,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .technicianStartTime;
 
-        const timeStamp = StartDate + StartTime;
+        const timeStamp = StartDate + StartTime; 
+        
 
         const Techsign =
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
@@ -460,13 +461,14 @@ router.post("/updateCompletedStatus", async (req, res) => {
             '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
         const html = header + body + footer;
 
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch();  
+
         const page = await browser.newPage();
         await page.setContent(html);
         await page.addStyleTag({
             content: `
         .watermark {
-          position: fixed;
+          position: fixed; 
           top: 0;
           left: 0;
           width: 100%;
@@ -583,7 +585,7 @@ router.post("/updateCompletedStatus", async (req, res) => {
 
 
 
-        
+
 
     } catch (error) {
         console.error("Error updating task status:", error);

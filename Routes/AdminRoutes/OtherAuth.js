@@ -16,6 +16,7 @@ const transporter = nodemailer.createTransport({
 // Generate a JWT token with the customer's email
 const generateToken = (email) => {
   return jwt.sign({ email }, "your-secret-key", { expiresIn: "1h" });
+  
 };
 
 // API endpoint to send reset link to customer's email
@@ -137,7 +138,7 @@ router.post("/resetPassword", async (req, res) => {
 
   try {
     // Find the user by email
-    let user = await Auth.findOne({ email });
+    let user = await Auth.findOne({ email, role: "Customer" });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -210,5 +211,42 @@ router.get("/getregisteredTechnician", async (req, res) => {
     });
   }
 });
+
+router.post("/resetPassword/tech", async (req, res) => {
+  let { email, password, confirmpassword } = req.body;
+
+  if (!email || !password || !confirmpassword) {
+    return res
+      .status(400)
+      .json({ message: "Email or password or confirmPassword missing" });
+  }
+
+  if (password !== confirmpassword) {
+    return res
+      .status(400)
+      .json({ message: "Password and confirmPassword do not match" });
+  }
+
+  try {
+    // Find the user by email
+    let user = await Auth.findOne({ email, role: "Technician" });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = password;
+    user.modified_date = new Date();
+
+    // Save the updated user
+    await user.save();
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({ message: "Password changing failed" });
+  }
+});
+
 
 module.exports = router;
