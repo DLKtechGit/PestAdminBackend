@@ -155,32 +155,6 @@ router.post("/customerdelete/:id", async (req, res) => {
   }
 });
 
-// router.post("/customerdelete/:id", async (req, res) => {
-//   try {
-//     const deletedCompany = await Company.findByIdAndDelete(req.params.id);
-//     if (deletedCompany) {
-//       const deletedCustomer = new DeletedCustomer({
-//         companyId: deletedCompany._id,
-//         name: deletedCompany.name,
-//         email: deletedCompany.email,
-//         address: deletedCompany.address,
-//         country: deletedCompany.country,
-//         state: deletedCompany.state,
-//         city: deletedCompany.city,
-//         phoneNumber: deletedCompany.phoneNumber,
-//         created_date: deletedCompany.created_date,
-//       });
-//       await deletedCustomer.save();
-//       res.status(200).json({ message: "Company deleted successfully." });
-//     } else {
-//       res.status(404).json({ error: "Company not found." });
-//     }
-//   } catch (error) {
-//     console.error("Error deleting company:", error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 
 router.get("/getall/deletedcompany", async (req, res) => {
   try {
@@ -205,35 +179,6 @@ router.get("/getall/deletedcompany", async (req, res) => {
     });
   }
 });
-
-// Restore a deleted company by ID
-// router.post("/deletedcompany/restore/:id", async (req, res) => {
-//   const _id = req.params.id
-//   try {
-//     const restoredCustomer = await DeletedCustomer.findByIdAndDelete(_id);
-//     if (restoredCustomer) {
-//       const restoredCompany = new Company({
-//         name: restoredCustomer.name,
-//         address: restoredCustomer.address,
-//         email: restoredCustomer.email,
-//         country: restoredCustomer.country,
-//         state: restoredCustomer.state,
-//         city: restoredCustomer.city,
-//         phoneNumber: restoredCustomer.phoneNumber,
-//         role:restoredCustomer.Customer,
-//         created_date: restoredCustomer.created_date,
-//       });
-//       await restoredCompany.save();
-// // console.log("restoredCompany",restoredCompany);
-//       res.status(200).json({ message: "Company restored successfully." });
-//     } else {
-//       res.status(404).json({ error: "Deleted company not found." });
-//     }
-//   } catch (error) {
-//     console.error("Error restoring company:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.post("/deletedcompany/restore/:id", async (req, res) => {
   const _id = req.params.id;
