@@ -65,10 +65,10 @@ const TaskSchema = new mongoose.Schema({
             serviceName: [{
                 type: String,
             }],
-            noqrcodeService: [{                
-                    subCategory: String,
-                    status: Boolean
-            }], 
+            noqrcodeService: [{
+                subCategory: String,
+                status: Boolean
+            }],
             QrCodeCategory: [{
                 category: {
                     type: String
@@ -78,7 +78,8 @@ const TaskSchema = new mongoose.Schema({
                 }],
                 subCategoryStatus: [{
                     subCategory: String,
-                    status: Boolean
+                    status: Boolean,
+                    skip:Boolean
                 }]
             }],
             mainCategory: [{

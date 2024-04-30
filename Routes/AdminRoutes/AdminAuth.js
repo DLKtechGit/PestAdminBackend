@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const Admin = require('../../Models/AdminSchema/AdminAuthModal');
+const nodemailer = require ('nodemailer')
+
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: "pestcontrol633@gmail.com",
+      pass: "acof axql bhdv yats",
+    },
+  });
+
+  router.post
 
 router.post('/register/superadmin', async (req, res) => {
     try {

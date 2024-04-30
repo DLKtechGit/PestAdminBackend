@@ -16,6 +16,7 @@ const Qrcode = require("./Routes/AdminRoutes/Qrcode")
 const Chemicals = require("./Routes/AdminRoutes/CreateChemicals")
 const Pdf = require ("./Routes/AdminRoutes/Pdf")
 const serviceCategory = require ("./Routes/AdminRoutes/ServiceCategory")
+const Issues = require ("./Routes/AdminRoutes/Issues")
 
 app.get("/", (req, res) => {
     res.send("from get route")
@@ -40,6 +41,7 @@ app.use('/reports', express.static(path.join(__dirname, '/reports')));
 
 app.use('/chemicals',Chemicals)
 app.use('/pdf',Pdf)
+app.use('/issuesApi',Issues)
 
 app.use('/EmailImgs', express.static(path.join(__dirname, '/EmailImgs')));
 
