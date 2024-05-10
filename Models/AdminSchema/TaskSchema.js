@@ -66,7 +66,7 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
             }],
             noqrcodeService: [{
-                subCategory: String,    
+                subCategory: String,
                 status: Boolean
             }],
             QrCodeCategory: [{
@@ -79,8 +79,11 @@ const TaskSchema = new mongoose.Schema({
                 subCategoryStatus: [{
                     subCategory: String,
                     status: Boolean,
-                    skip:Boolean,
-                    pauseReason:String
+                    skip: Boolean,
+                    pauseDetails: [{
+                        pauseReason: String,
+                        pauseTiming: String
+                    }]
                 }]
             }],
             mainCategory: [{
@@ -120,6 +123,14 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 default: 'Yet to Start'
             },
+            Rodentstatus: {
+                type: Boolean,
+                default: false
+            },
+            QrCountStatus: {
+                type: String,
+                default: "0"
+            },
             qrDetails: [{
                 serviceName: {
                     type: String
@@ -131,7 +142,7 @@ const TaskSchema = new mongoose.Schema({
                     title: {
                         type: String,
                     },
-                    skip:Boolean,
+                    skip: Boolean,
                     qrScanned: {
                         type: Boolean,
                         default: false
