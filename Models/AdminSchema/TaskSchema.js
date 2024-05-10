@@ -79,7 +79,11 @@ const TaskSchema = new mongoose.Schema({
                 subCategoryStatus: [{
                     subCategory: String,
                     status: Boolean,
-                    skip:Boolean
+                    skip: Boolean,
+                    pauseDetails: [{
+                        pauseReason: String,
+                        pauseTiming: String
+                    }]
                 }]
             }],
             mainCategory: [{
@@ -128,8 +132,9 @@ const TaskSchema = new mongoose.Schema({
                 },
                 titles: [{
                     title: {
-                        type: String
+                        type: String,
                     },
+                    skip: Boolean,
                     qrScanned: {
                         type: Boolean,
                         default: false

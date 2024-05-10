@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Admin = require('../../Models/AdminSchema/AdminAuthModal');
 const nodemailer = require ('nodemailer')
+const randomstring = require('randomstring')
 
 const transporter = nodemailer.createTransport({
     service: "Gmail",
@@ -11,7 +12,94 @@ const transporter = nodemailer.createTransport({
     },
   });
 
-  router.post
+  const ResetLink = 'http://localhost:3004'
+
+  router.post("/forgot", async (req, res) => { 
+    const { email } = req.body;
+    try {
+      const admin = await Admin.findOne({ email });
+  
+      if (!admin) {
+        return res.status(400).json({ error: "Admin not found" });
+      }
+  
+      const randomString = randomstring.generate({
+        length: 10,
+        charset: "alphanumeric",
+      });
+      console.log("randomString", randomString);
+  
+      const expirationTimestamp = Date.now() + 2 * 60 * 1000;
+      console.log("expirationTimestamp", expirationTimestamp);
+  
+      const resetlink = `${ResetLink}/reset-password/${randomString}/${expirationTimestamp}`;
+  
+      const mailOptions = {
+        from: "dlktechnologiesreact@gmail.com",
+        to: email,
+        subject: "Password Reset",
+        html: `<p>You are receiving this email because you (or someone else) has requested a password reset.</p>
+               <p>Click <a href="${resetlink}">here</a> to reset your password. ${email}</p>`,
+      };
+  
+      await transporter.sendMail(mailOptions);
+  
+      admin.randomString = randomString;
+      await admin.save();
+  
+      res.status(200).json({ message: "Reset email sent successfully." });
+    } catch (error) {
+      console.error("Error sending reset email:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+
+  router.post("/reset/password/:randomString/:expirationTimestmpa", async (req, res) => {
+    const { newPassword, confirmPassword } = req.body;
+    try {
+      const { randomString, expirationTimestamp } = req.params;
+  
+      const admin = await Admin.findOne({ randomString });
+  
+      if (!admin || admin.randomString !== randomString) {
+        return res.status(400).json({
+          message: "Invalid Random String",
+        });
+      }
+  
+      if (expirationTimestamp < Date.now()) {
+        return res.status(400).json({
+          message: "Reset link has expired. Please request a new reset link.",
+        });
+      }
+  
+      if (!newPassword || !confirmPassword) {
+        return res.status(400).json({
+          message: "New password and confirm password are required.",
+        });
+      }
+  
+      if (newPassword !== confirmPassword) {
+        return res.status(401).json({
+          message: "Password and Confirm password do not match",
+        });
+      }
+  
+      admin.password = newPassword;
+      admin.randomString = null;
+      await admin.save();
+  
+      res.status(200).json({
+        message: "Password reset successful",
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Server Error" });
+    }
+  });
+  
+
 
 router.post('/register/superadmin', async (req, res) => {
     try {

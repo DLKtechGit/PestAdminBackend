@@ -20,10 +20,10 @@ const TechnicianAuth = new mongoose.Schema({
     },
     confirmpassword:{
         type: String,        
-        // required: true
+        // required: true 
     },  
     created_date: Date,
 });
 
-const TechnicianRegisterModels = mongoose.model("RegisterTechnician", TechnicianAuth);
+const TechnicianRegisterModels = mongoose.model("RegisterTechnician", TechnicianAuth);   
 module.exports = TechnicianRegisterModels;

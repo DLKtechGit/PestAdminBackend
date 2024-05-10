@@ -25,9 +25,9 @@ router.post("/forgotpasswordLink", async (req, res) => {
 
   try {
     // Check if the customer exists
-    const customer = await Auth.findOne({ email, role: "Customer" });
+    const customer = await Auth.findOne({  email,registered:'true',deleted:'false'  });
     if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Generate a reset token
@@ -39,7 +39,7 @@ router.post("/forgotpasswordLink", async (req, res) => {
       to: email,
       subject: "Password Reset",
       html: `<p>You are receiving this email because you (or someone else) has requested a password reset.</p>
-               <p>Click <a href="http://localhost:3000/reset-password">here</a> to reset your password. ${email}</p>`,
+               <p>Click <a href="http://localhost:3003/reset-password">here</a> to reset your password. ${email}</p>`,
     };
 
     // Send email
@@ -58,7 +58,7 @@ router.post("/reset-password", async (req, res) => {
   const {email, newPassword, confirmpassword } = req.body;
 
   try {
-    const user = await Auth.findOne({ email, role: "Customer" });
+    const user = await Auth.findOne({ email});
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
