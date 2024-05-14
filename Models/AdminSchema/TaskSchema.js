@@ -123,6 +123,14 @@ const TaskSchema = new mongoose.Schema({
                 type: String,
                 default: 'Yet to Start'
             },
+            Rodentstatus: {
+                type: Boolean,
+                default: false
+            },
+            QrCountStatus: {
+                type: String,
+                default: "0"
+            },
             qrDetails: [{
                 serviceName: {
                     type: String

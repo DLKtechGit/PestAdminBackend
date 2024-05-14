@@ -245,6 +245,171 @@ router.post("/updateTaskOtherTechnicianName", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+router.post("/updateRodentStatusMain", async (req, res) => {
+    try {
+        const {
+            taskItemId,
+            taskId,
+            Rodentstatus,
+        } = req.body;
+
+        const taskToUpdate = await Task.findOne({
+            _id: taskId,
+            "technicians.tasks._id": taskItemId,
+        });
+
+        if (!taskToUpdate) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
+            tech.tasks.some((task) => task._id.equals(taskItemId))
+        );
+
+        if (technicianIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
+            (task) => task._id.equals(taskItemId)
+        );
+
+        if (taskIndex === -1) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        // Optionally, update other fields such as status, startDate, etc.
+        taskToUpdate.technicians[technicianIndex].tasks[taskIndex].Rodentstatus = Rodentstatus;
+
+        await taskToUpdate.save();
+
+        res.status(200).json({
+            message: "Task status and completed details updated successfully",
+            updatedTask: taskToUpdate,
+        });
+    } catch (error) {
+        console.error("Error updating task status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.post("/updateRodentSkipStatus", async (req, res) => {
+    try {
+        const { taskItemId, taskId, rodentId, skip, qrScanned } = req.body;
+
+        const updatedTask = await Task.findOneAndUpdate(
+            {
+                _id: taskId,
+                "technicians.tasks._id": taskItemId,
+                "technicians.tasks.qrDetails.titles._id": rodentId
+            },
+            {
+                $set: {
+                    "technicians.$[tech].tasks.$[task].qrDetails.$[qrDetail].titles.$[title].skip": skip,
+                    "technicians.$[tech].tasks.$[task].qrDetails.$[qrDetail].titles.$[title].qrScanned": qrScanned
+                }
+            },
+            {
+                arrayFilters: [
+                    { "tech.tasks._id": taskItemId },
+                    { "task._id": taskItemId },
+                    { "qrDetail.titles._id": rodentId },
+                    { "title._id": rodentId }
+                ],
+                new: true // Return the updated document
+            }
+        );
+
+        if (!updatedTask) {
+            return res.status(404).json({ error: "Task not found or provided IDs do not match" });
+        }
+
+        res.status(200).json({
+            message: "QR code status updated successfully",
+            updatedTask
+        });
+    } catch (error) {
+        console.error("Error updating QR code status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+
+router.post("/getRodentSkipStatusFalse", async (req, res) => {
+    try {
+        const { taskItemId } = req.body;
+
+        const tasksWithRodentPro = await Task.find({
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.qrDetails.serviceName": "Rodent Pro",
+        });
+
+        if (!tasksWithRodentPro || tasksWithRodentPro.length === 0) {
+            return res.status(404).json({ error: `No tasks found with the provided taskItemId '${taskItemId}', serviceName 'Rodent Pro', and skip 'false'` });
+        }
+
+        const qrDetailsWithRodentPro = tasksWithRodentPro.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.filter(task => task._id.toString() === taskItemId)
+                    .flatMap(task => // Added missing flatMap
+                        task.qrDetails.filter(qrDetails =>
+                            qrDetails.serviceName === "Rodent Pro" &&
+                            qrDetails.titles.some(title => title.skip === false)
+                        ).map(qrDetails => ({
+                            titles: qrDetails.titles.filter(title => title.skip === false)
+                        }))
+                    )
+            )
+        );
+
+
+        // console.log("qrDetailsWithRodentPro", qrDetailsWithRodentPro);
+
+        res.status(200).json({
+            qrDetails: qrDetailsWithRodentPro
+        });
+    } catch (error) {
+        console.error("Error retrieving tasks with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.post("/getRodentQrTrue", async (req, res) => {
+    try {
+        const { taskItemId } = req.body;
+
+        const tasksWithRodentPro = await Task.find({
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.qrDetails.serviceName": "Rodent Pro",
+        });
+
+        if (!tasksWithRodentPro || tasksWithRodentPro.length === 0) {
+            return res.status(404).json({ error: `No tasks found with the provided taskItemId '${taskItemId}', serviceName 'Rodent Pro', and skip 'false'` });
+        }
+
+        const qrDetailsWithRodentPro = tasksWithRodentPro.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.filter(task => task._id.toString() === taskItemId)
+                    .flatMap(task =>
+                        task.qrDetails.filter(qrDetails =>
+                            qrDetails.serviceName === "Rodent Pro" &&
+                            qrDetails.titles.some(title => title.qrScanned === true)
+                        ).map(qrDetails => ({
+                            titles: qrDetails.titles.filter(title => title.qrScanned === true).slice(0, 1)
+                        }))
+                    )
+            )
+        );
+
+        res.status(200).json({
+            qrDetails: qrDetailsWithRodentPro
+        });
+    } catch (error) {
+        console.error("Error retrieving tasks with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 
 router.post("/updateRodentSkipStatus", async (req, res) => {
     try {
@@ -489,7 +654,6 @@ router.post("/updateQrscannedStatus", async (req, res) => {
     }
 });
 
-
 router.post("/updateSubCategoryStatus", async (req, res) => {
     try {
         const { taskItemId, taskId, status, subcatId } = req.body;
@@ -620,6 +784,76 @@ router.get("/getNoSubCategoryFalseStatus", async (req, res) => {
     }
 });
 
+router.get("/getGeneralFalseStatus", async (req, res) => {
+    try {
+        const tasksWithFalseStatus = await Task.find({
+            "technicians.tasks.QrCodeCategory.category": "General Pest Control",
+            "technicians.tasks.QrCodeCategory.subCategoryStatus.status": false
+        });
+
+        if (!tasksWithFalseStatus || tasksWithFalseStatus.length === 0) {
+            return res.status(404).json({ error: "No tasks found with status 'false' in the General Pest Control category" });
+        }
+
+        const subCategoryStatusWithFalseStatus = tasksWithFalseStatus.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.flatMap(task =>
+                    task.QrCodeCategory.filter(qrCodeCategory =>
+                        qrCodeCategory.category === "General Pest Control" &&
+                        qrCodeCategory.subCategoryStatus.some(status => status.status === false)
+                    ).flatMap(filteredCategory =>
+                        filteredCategory.subCategoryStatus.filter(status => status.status === false)
+                    )
+                )
+            )
+        );
+
+        if (subCategoryStatusWithFalseStatus.length === 0) {
+            return res.status(404).json({ error: "No subCategoryStatus found with status 'false' in the General Pest Control category" });
+        }
+
+        res.status(200).json({ subCategoryStatusWithFalseStatus });
+    } catch (error) {
+        console.error("Error retrieving subCategoryStatus with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+router.post("/getGeneraltrueStatus", async (req, res) => {
+    try {
+        const { taskItemId } = req.body;
+
+        const tasksWithRodentPro = await Task.find({
+            "technicians.tasks._id": taskItemId,
+            "technicians.tasks.QrCodeCategory.category": "General Pest Control",
+        });
+
+        if (!tasksWithRodentPro || tasksWithRodentPro.length === 0) {
+            return res.status(404).json({ error: `No tasks found with the provided taskItemId '${taskItemId}', serviceName 'Rodent Pro', and skip 'false'` });
+        }
+
+        const subCategoryStatusWithFalseStatus = tasksWithRodentPro.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.filter(task => task._id.toString() === taskItemId)
+                .flatMap(task =>
+                    task.QrCodeCategory.filter(qrCodeCategory =>
+                        qrCodeCategory.category === "General Pest Control" &&
+                        qrCodeCategory.subCategoryStatus.some(status => status.status === true)
+                    ).flatMap(filteredCategory =>
+                        filteredCategory.subCategoryStatus.filter(status => status.status === true)
+                    )
+                )
+            )
+        );
+
+        res.status(200).json({
+           subCategoryStatusWithFalseStatus
+        });
+    } catch (error) {
+        console.error("Error retrieving tasks with false status:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
     try {
@@ -641,6 +875,7 @@ router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
             )
         );
 
+
         if (subCategoryStatusWithFalseStatus.length === 0) {
             return res.status(404).json({ error: "No subCategoryStatus found with status 'false'" });
         }
@@ -653,8 +888,6 @@ router.get("/getSubCategoryStatusWithFalseStatus", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
-
-
 
 router.post("/updateQrCodeCompletedStatus", async (req, res) => {
     try {
@@ -783,8 +1016,15 @@ router.post("/updateCompletedStatus", async (req, res) => {
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
                 .completedDetails.techSign;
 
-        const QrCodeCategory = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].QrCodeCategory.map(item => item.subCategory);
-
+        const QrCodeCategory = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].QrCodeCategory.map(data => {
+            return data.subCategoryStatus.map(item => {
+                if (item.skip === true) {
+                    return `${item.subCategory} (Skipped)`;
+                } else {
+                    return item.subCategory;
+                }
+            });
+        });
 
         const TechnicianfirstName =
             taskToUpdate.technicians[technicianIndex].tasks[taskIndex]
@@ -817,7 +1057,8 @@ router.post("/updateCompletedStatus", async (req, res) => {
 
         const header = `<!DOCTYPE html><html><head><title>Page Title</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet"><style>html {-webkit-print-color-adjust: exact;}body{font-family: "Poppins";margin:0}.heading {background-color:#3A3A3A;color:white;font-weight:bold; width:100%;z-index: 1000;top:0;left:0;right:0}.heading td{padding-left:10px;}.logo{ text-align:end;padding-right:10px;}.date_head {font-size:14px;font-weight:normal;}.body_content{margin:10px;}.footer{background-color:#3A3A3A;color:white;padding:10px;left:0;right:0;bottom:0px; position: fixed;}.address{text-align:end; width:450px;text-align:left;}.mobile{width:250px;}.mail{width:300px;} .remarks{max-width: 150px;line-break: anywhere;}</style></head><body><table width="100%" cellpadding="0" cellspacing="0"><tr class="heading"><td>SERVICE REPORT <br /><span class="date_head">${currentDate}</span></td><td class="logo"><img src="http://localhost:4000/images/logo.png"/></td></tr><tr><td></td><td class="logo"><img src="http://localhost:4000/images/pest.svg" width="100px" /><img src="http://localhost:4000/images/BPCA.png" width="50px" /></td></tr></table>`;
 
-        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td height="80px">${QrCodeCategory}</td></tr><tr><td><b>Chemical Used</b></td><td height="80px">${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div>${completedDetails.customerSign === "N/A" ? "N/A" : `<img src="data:image/png;base64,${customerSignBase64}" width="150px" />`}</div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>   ${OtherTechnicianName ? OtherTechnicianName : "N/A"}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td height="150px" class="remarks">${completedDetails.recommendation}</td></tr></table></center>`;
+        const body = `<center><table border="1" cellpadding="5" cellspacing="0" class="body_content" width="95%"><tr><th colspan=2>CUSTOMER INFORMATION</th><tr><tr><td><b>Name</b></td><td>${CustomerName}</td></tr><tr><td><b>Address</b></td><td>${Address}in</td></tr><tr><td><b>Mobile Number</b></td><td>${PhoneNumber}</td></tr> <tr><td><b>Service Type</b></td><td height="80px">${QrCodeCategory}${QrCodeCategory.includes("skip") ? " (Skipped)" : ""}</td></tr><tr><td><b>Chemical Used</b></td><td height="80px">${completedDetails.chemicalsName}</td></tr><tr><td><b>Start Time</b></td><td>${StartTime}</td></tr><tr><td><b>End Time</b></td><td>${completedDetails.endTime}</td></tr><tr><td><table><tr><td><div><b>Customer Sign</b></div><br /><div>${completedDetails.customerSign === "N/A" ? "N/A" : `<img src="data:image/png;base64,${customerSignBase64}" width="150px" />`}</div><div><b>Name:</b>   ${CustomerName}</div></td></table></td><td><table><tr><td><div><b>Technician Sign</b></div><br /><div><img src="data:image/png;base64,${techSignBase64}" width="150px" /></div><div><b>Name:</b>   ${TechnicianName}</div><div><b>Other Technician:</b>   ${OtherTechnicianName ? OtherTechnicianName : "N/A"}</div></td> </tr></table></td></tr><tr><td><b>Recommendation / Remarks</b></td><td height="150px" class="remarks">${completedDetails.recommendation}</td></tr></table></center>`;
+
         const footer =
             '<table width="100%"  cellpadding="0" cellspacing="0" class="footer"><tr><td class="mobile"><i class="fa fa-phone"></i> +973 17720648</td><td class="mail"><i class="fa fa-envelope" aria-hidden="true"></i> info@pestpatrolbh.com</td><td class="address"><i class="fa fa-map-marker" aria-hidden="true"></i> Flat 1, Building 679,Road 3519, Block 335. Um Al Hassam CR.No. 3121-6</td></tr></table></body></html>';
         const html = header + body + footer;
@@ -928,7 +1169,6 @@ router.post("/updateCompletedStatus", async (req, res) => {
     }
 });
 
-
 router.get("/completedTaskDetails/:taskId/:taskItemId", async (req, res) => {
     try {
         const { taskId, taskItemId } = req.params;
@@ -973,7 +1213,6 @@ router.get("/completedTaskDetails/:taskId/:taskItemId", async (req, res) => {
 });
 
 module.exports = router;
-
 
 router.get("/start/taskcount", async (req, res) => {
     try {
@@ -1032,7 +1271,7 @@ router.post("/updatePausedetails", async (req, res) => {
             taskItemId,
             taskId,
             pauseReason,
-            pauseTiming, 
+            pauseTiming, // Added pause timing from the request body
             subCatId,
         } = req.body;
 
@@ -1077,11 +1316,12 @@ router.post("/updatePausedetails", async (req, res) => {
         }
 
         // Check if pause reason already exists
-        // const pauseDetailIndex = qrDetail.subCategoryStatus[titleIndex].pauseDetails.findIndex(
-        //     (detail) => detail.pauseReason === pauseReason
-        // );
+        const pauseDetailIndex = qrDetail.subCategoryStatus[titleIndex].pauseDetails.findIndex(
+            (detail) => detail.pauseReason === pauseReason
+        );
 
-        
+        if (pauseDetailIndex === -1) {
+            // If pause reason doesn't exist, add it
             qrDetail.subCategoryStatus[titleIndex].pauseDetails.push({
                 pauseReason,
                 pauseTiming // Added pause timing to the pause details
@@ -1092,80 +1332,44 @@ router.post("/updatePausedetails", async (req, res) => {
                 message: "Pause reason added successfully",
                 updatedTask: taskToUpdate,
             });
-       
+        } else {
+            res.status(400).json({ error: "Pause reason already exists" });
+        }
     } catch (error) {
         console.error("Error updating task status:", error);
         res.status(500).json({ error: "Server error" });
     }
 });
 
-router.post("/pauseduration", async (req, res) => {
+router.post("/getRodentStatus", async (req, res) => {
     try {
-        const {
-            taskItemId,
-            taskId,
-            pauseDuration,
-            subCatId,
+        const { taskItemId } = req.body;
 
-        } = req.body;
-
-        const taskToUpdate = await Task.findOne({
-            _id: taskId,
+        const tasksWithRodentPro = await Task.find({
             "technicians.tasks._id": taskItemId,
-            "technicians.tasks.QrCodeCategory.subCategoryStatus._id": subCatId
+            "technicians.tasks.qrDetails.serviceName": "Rodent Pro",
         });
 
-        if (!taskToUpdate) {
-            return res.status(404).json({ error: "Task not found" });
+        if (!tasksWithRodentPro || tasksWithRodentPro.length === 0) {
+            return res.status(404).json({ error: `No tasks found with the provided taskItemId '${taskItemId}', serviceName 'Rodent Pro'` });
         }
 
-        const technicianIndex = taskToUpdate.technicians.findIndex((tech) =>
-            tech.tasks.some((task) => task._id.equals(taskItemId))
+        const qrDetailsWithRodentPro = tasksWithRodentPro.flatMap(task =>
+            task.technicians.flatMap(tech =>
+                tech.tasks.filter(task => task._id.toString() === taskItemId)
+                    .map(task => ({
+                        Rodentstatus : task.Rodentstatus
+                    }))
+            )
         );
 
-        if (technicianIndex === -1) {
-            return res.status(404).json({ error: "Task not found" });
-        }
-
-        const taskIndex = taskToUpdate.technicians[technicianIndex].tasks.findIndex(
-            (task) => task._id.equals(taskItemId)
+        res.status(200).json(
+            qrDetailsWithRodentPro
         );
-
-        if (taskIndex === -1) {
-            return res.status(404).json({ error: "Task not found" });
-        }
-
-        const qrDetail = taskToUpdate.technicians[technicianIndex].tasks[taskIndex].QrCodeCategory.find(
-            (QrCodeCategory) => QrCodeCategory.subCategoryStatus.some((title) => String(title._id) === String(subCatId))
-        );
-
-        if (!qrDetail) {
-            return res.status(404).json({ error: "QR code details not found" });
-        }
-
-        const titleIndex = qrDetail.subCategoryStatus.findIndex((title) => String(title._id) === String(subCatId));
-
-        if (titleIndex === -1) {
-            return res.status(404).json({ error: "QR code not found" });
-        }
-
-       
-            qrDetail.subCategoryStatus[titleIndex].PauseDurationTime.push(pauseDuration);
-            await taskToUpdate.save();
-
-            res.status(200).json({
-                message: "Pause Time added successfully", 
-                updatedTask: taskToUpdate,
-            });
-      
-            
-        
     } catch (error) {
-        console.error("Error updating task status:", error);
+        console.error("Error retrieving tasks:", error);
         res.status(500).json({ error: "Server error" });
     }
 });
 
-
-module.exports = router;  
-
+module.exports = router; 

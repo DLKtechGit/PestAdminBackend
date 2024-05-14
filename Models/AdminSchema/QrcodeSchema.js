@@ -12,6 +12,7 @@ const qrCodeSchema = new mongoose.Schema({
     },
     titles: [{
         title: { type: String },
+        skip:Boolean
         // Other properties if needed
     }],
     serviceName: {

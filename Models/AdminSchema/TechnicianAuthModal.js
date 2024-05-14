@@ -26,4 +26,4 @@ const TechnicianAuth = new mongoose.Schema({
 });
 
 const TechnicianRegisterModels = mongoose.model("RegisterTechnician", TechnicianAuth);   
-module.exports = TechnicianRegisterModels;
+module.exports = TechnicianRegisterModels; 
